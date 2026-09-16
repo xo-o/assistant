@@ -1,137 +1,170 @@
-# Especificación SDD 01: Contratos de API e I/O de Herramientas
-
-Esta especificación formal define los contratos de interfaz, esquemas de datos y especificaciones de entrada/salida (I/O) para la migración del Asesor Automotriz Virtual a código limpio con tipado estricto (Pydantic v2 en Backend y TypeScript en Frontend).
+# 01 - Tool & API Contracts Specification
+**Module:** Automotive Advisor Agent ("Luis") Migration  
+**Status:** Approved for Implementation  
+**Standard:** OpenAPI 3.1 & Zod Validation Schemas  
+**Database Convention:** English Table and Field Names  
 
 ---
 
-## 1. Contratos de API REST & Streaming
+## 1. System Context & Overview
 
-### 1.1 Endpoint Principal de Chat (Streaming SSE)
-- **Ruta**: `POST /api/v1/chat`
-- **Content-Type**: `application/json`
-- **Accept**: `text/event-stream` o `application/json`
-- **Descripción**: Procesa el mensaje del usuario de forma asíncrona, gestiona la sesión conversacional y transmite la respuesta en streaming token-a-token junto con eventos de herramientas y telemetría.
+This document specifies the structural contracts, inputs/outputs, database schemas, and REST/SSE communication protocols for the migrated Automotive Advisor Agent (*Luis*). The architecture completely decouples the conversational reasoning core (powered by Google ADK / Google Gen AI SDK) from the presentation layer (built with React and `assistant-ui`).
 
-#### Request Schema (Pydantic: `ChatRequest`)
-```json
-{
-  "message": "Hola, estoy buscando un auto espacioso para mi familia",
-  "session_id": "sess_9b1deb4d-3b7d-4bad-9bdd-2b0d7b3dcb6d",
-  "model": "gemini-1.5-pro",
-  "stream": true
-}
-```
+---
 
-| Campo | Tipo | Requerido | Descripción |
+## 2. Database Schema Contracts (English Convention)
+
+The persistence layer supports SQLite (default zero-config in WAL mode) and PostgreSQL. All table and column names strictly adhere to English snake_case conventions.
+
+### 2.1 Table: `chat_sessions`
+Represents an isolated multi-turn conversational session.
+
+| Column | Type | Constraints | Description |
 | :--- | :--- | :--- | :--- |
-| `message` | `string` (min: 1, max: 2000) | Sí | Mensaje enviado por el usuario. |
-| `session_id` | `string` (UUID o custom key) | No | Identificador de sesión. Si no se provee, se genera uno nuevo. |
-| `model` | `string` (enum: `gemini-1.5-pro`, `gemini-2.0-flash`, `gemini-1.5-flash`, `mock-agent`) | No (default: `gemini-1.5-pro`) | Modelo de Google Gen AI a utilizar. |
-| `stream` | `boolean` | No (default: `true`) | Habilita el streaming de eventos SSE. |
+| `id` | VARCHAR(64) | PRIMARY KEY | Unique session identifier (`sessionId`) |
+| `user_id` | VARCHAR(64) | NULLABLE | Optional authenticated or anonymous user ID |
+| `title` | VARCHAR(255) | NULLABLE | Auto-generated or custom conversation title |
+| `created_at` | TIMESTAMP | NOT NULL, DEFAULT NOW | Session creation timestamp |
+| `updated_at` | TIMESTAMP | NOT NULL, DEFAULT NOW | Timestamp of last activity in session |
+| `metadata` | JSON/TEXT | NULLABLE | Metadata attributes (client IP, device, channel) |
 
-#### Eventos de Streaming (SSE Protocol)
-| Evento | Payload | Descripción |
-| :--- | :--- | :--- |
-| `event: text_delta` | `{"delta": "¡Hola! "}` | Segmento de texto generado por el LLM en tiempo real. |
-| `event: tool_call` | `{"tool": "guardar_lead", "input": {...}, "output": {...}}` | Notificación de ejecución de herramienta. |
-| `event: hitl_interrupt`| `{"ticket_id": "TICK-48201", "motivo": "TEST_DRIVE", "resumen": "..."}` | Interrupción asistida por solicitud de test drive o cotización. |
-| `event: telemetry` | `{"trace_id": "...", "latency_ms": 640, "prompt_tokens": 120, "completion_tokens": 35}` | Resumen de rendimiento del turno. |
-| `event: done` | `{"session_id": "...", "status": "completed"}` | Cierre del stream. |
+### 2.2 Table: `chat_messages`
+Stores individual conversation turns with token counts for sliding window context management.
+
+| Column | Type | Constraints | Description |
+| :--- | :--- | :--- | :--- |
+| `id` | VARCHAR(64) | PRIMARY KEY | Unique message identifier |
+| `session_id` | VARCHAR(64) | FOREIGN KEY (`chat_sessions.id`) | Owning session reference |
+| `role` | VARCHAR(20) | NOT NULL | Message author: `'user'`, `'assistant'`, `'system'`, `'tool'` |
+| `content` | TEXT | NOT NULL | Text payload of the message |
+| `token_count` | INTEGER | NOT NULL DEFAULT 0 | Estimated or exact token count |
+| `tool_calls` | JSON/TEXT | NULLABLE | Serialized tool call requests (if any) |
+| `tool_results`| JSON/TEXT | NULLABLE | Serialized tool execution outputs (if any) |
+| `created_at` | TIMESTAMP | NOT NULL, DEFAULT NOW | Timestamp of message creation |
+
+### 2.3 Table: `leads`
+Stores captured automotive prospect profiles extracted during natural dialogue.
+
+| Column | Type | Constraints | Description |
+| :--- | :--- | :--- | :--- |
+| `id` | VARCHAR(64) | PRIMARY KEY | Unique lead record ID |
+| `session_id` | VARCHAR(64) | UNIQUE, FOREIGN KEY (`chat_sessions.id`) | Associated session ID |
+| `name` | VARCHAR(128) | NULLABLE | Customer full name or first name |
+| `contact_channel` | VARCHAR(128) | NULLABLE | Contact identifier (session ID, phone, email) |
+| `vehicle_type_interest` | VARCHAR(64) | NULLABLE | e.g. `'SUV'`, `'Sedan'`, `'Hatchback'`, `'Pickup'`, `'Hybrid'` |
+| `primary_use` | VARCHAR(255) | NULLABLE | e.g. `'City commuting'`, `'Family travel'`, `'Cargo/Work'` |
+| `stage` | VARCHAR(32) | NOT NULL DEFAULT `'DISCOVERY'` | `'DISCOVERY'` or `'CONCRETE_INTEREST'` |
+| `status` | VARCHAR(32) | NOT NULL DEFAULT `'ACTIVE'` | `'ACTIVE'`, `'QUALIFIED'`, `'CONTACTED'` |
+| `created_at` | TIMESTAMP | NOT NULL, DEFAULT NOW | Record creation timestamp |
+| `updated_at` | TIMESTAMP | NOT NULL, DEFAULT NOW | Last record update timestamp |
+
+### 2.4 Table: `hitl_tickets`
+Maintains Human-in-the-Loop escalation tickets generated by the agent.
+
+| Column | Type | Constraints | Description |
+| :--- | :--- | :--- | :--- |
+| `id` | VARCHAR(64) | PRIMARY KEY | Unique ticket ID |
+| `ticket_code` | VARCHAR(32) | UNIQUE, NOT NULL | Human-readable identifier (e.g. `TICK-84729`) |
+| `session_id` | VARCHAR(64) | FOREIGN KEY (`chat_sessions.id`) | Owning session ID |
+| `reason` | VARCHAR(64) | NOT NULL | Escalation trigger: `'TEST_DRIVE'`, `'FORMAL_QUOTE'`, `'HUMAN_REQUEST'` |
+| `requirement_summary` | TEXT | NOT NULL | Condensed overview of customer's request and vehicle |
+| `status` | VARCHAR(32) | NOT NULL DEFAULT `'PENDING'` | `'PENDING'`, `'IN_PROGRESS'`, `'RESOLVED'`, `'CANCELLED'` |
+| `operator_notes` | TEXT | NULLABLE | Human operator follow-up comments |
+| `created_at` | TIMESTAMP | NOT NULL, DEFAULT NOW | Ticket creation timestamp |
+| `updated_at` | TIMESTAMP | NOT NULL, DEFAULT NOW | Ticket resolution timestamp |
+
+### 2.5 Table: `user_feedbacks`
+Captures quantitative and qualitative feedback on assistant responses.
+
+| Column | Type | Constraints | Description |
+| :--- | :--- | :--- | :--- |
+| `id` | VARCHAR(64) | PRIMARY KEY | Unique feedback ID |
+| `session_id` | VARCHAR(64) | FOREIGN KEY (`chat_sessions.id`) | Associated session ID |
+| `message_id` | VARCHAR(64) | NULLABLE | Specific message rated |
+| `is_positive` | BOOLEAN | NOT NULL | `true` for thumbs up, `false` for thumbs down |
+| `rating` | INTEGER | NULLABLE | Optional 1 to 5 star rating |
+| `comment` | TEXT | NULLABLE | Optional textual critique or compliment |
+| `created_at` | TIMESTAMP | NOT NULL, DEFAULT NOW | Timestamp of submission |
+
+### 2.6 Table: `execution_traces`
+Records granular turn-by-turn telemetry for OpenTelemetry and local dashboard validation.
+
+| Column | Type | Constraints | Description |
+| :--- | :--- | :--- | :--- |
+| `id` | VARCHAR(64) | PRIMARY KEY | Unique trace entry ID |
+| `trace_id` | VARCHAR(64) | NOT NULL | OpenTelemetry W3C Trace ID |
+| `session_id` | VARCHAR(64) | NOT NULL | Associated session ID |
+| `model_name` | VARCHAR(64) | NOT NULL | e.g. `'gemini-1.5-pro'`, `'gemini-2.0-flash'` |
+| `latency_ms` | INTEGER | NOT NULL | End-to-end turn latency in milliseconds |
+| `input_tokens` | INTEGER | NOT NULL | Prompt token consumption |
+| `output_tokens`| INTEGER | NOT NULL | Completion token consumption |
+| `total_tokens` | INTEGER | NOT NULL | Consolidated token usage |
+| `tools_called` | JSON/TEXT | NULLABLE | Serialized tool invocations and execution results |
+| `guardrails_result` | JSON/TEXT | NULLABLE | Pre/post guardrail evaluation metrics |
+| `created_at` | TIMESTAMP | NOT NULL, DEFAULT NOW | Trace timestamp |
 
 ---
 
-### 1.2 Endpoint de Gestión de Leads
-- **Ruta**: `GET /api/v1/leads/{session_id}` y `GET /api/v1/leads`
-- **Descripción**: Consulta el estado de los leads registrados durante la conversación.
+## 3. Tool I/O Contracts (Agent Harness)
 
-#### Response Schema (Pydantic: `LeadResponse`)
-```json
-{
-  "id": 1,
-  "session_id": "sess_9b1deb4d-3b7d-4bad-9bdd-2b0d7b3dcb6d",
-  "nombre": "Carlos Mendoza",
-  "canal_contacto": "web_chat",
-  "tipo_vehiculo_interes": "SUV",
-  "uso_principal": "Viajes familiares y ciudad",
-  "etapa": "INTERES_CONCRETO",
-  "created_at": "2026-09-16T14:30:00Z",
-  "updated_at": "2026-09-16T14:32:15Z"
-}
+All tools are strictly validated using **Zod schemas**. The agent receives typed arguments and returns standardized payloads matching the baseline behavior.
+
+### 3.1 Tool: `guardar_lead`
+* **Description:** Persists or updates the customer lead profile in the database. Invoked silently as soon as the user shares their name, preferred vehicle type, primary usage, or interest stage.
+
+#### Input Schema (Zod)
+```typescript
+import { z } from "zod";
+
+export const GuardarLeadInputSchema = z.object({
+  session_id: z.string().describe("Current active session ID"),
+  nombre: z.string().optional().describe("User's name if identified"),
+  canal_contacto: z.string().optional().describe("Contact identifier or session reference"),
+  tipo_vehiculo_interes: z.string().optional().describe("Vehicle body or category of interest (e.g., SUV, Sedán, Pickup, Híbrido)"),
+  uso_principal: z.string().optional().describe("Intended usage (e.g., Ciudad, Familia, Trabajo, Viajes)"),
+  etapa: z.enum(["DESCUBRIMIENTO", "INTERES_CONCRETO"]).default("DESCUBRIMIENTO").describe("Customer readiness stage")
+});
+
+export type GuardarLeadInput = z.infer<typeof GuardarLeadInputSchema>;
 ```
 
----
+#### Output Schema (Zod)
+```typescript
+export const GuardarLeadOutputSchema = z.object({
+  status: z.literal("success"),
+  message: z.string(),
+  lead: z.object({
+    session_id: z.string(),
+    nombre: z.string(),
+    tipo_vehiculo: z.string(),
+    uso: z.string(),
+    etapa: z.string()
+  })
+});
 
-### 1.3 Endpoint de Tickets Human-in-the-Loop (HITL)
-- **Rutas**: 
-  - `GET /api/v1/hitl/tickets`
-  - `POST /api/v1/hitl/tickets/{ticket_id}/resolve`
-- **Descripción**: Permite auditar y resolver intervenciones humanas pendientes generadas por el bot.
-
-#### Request para Resolución (`HITLResolveRequest`)
-```json
-{
-  "action": "APPROVED",
-  "agent_notes": "Contacto confirmado con el cliente vía telefónica. Cita de test drive agendada para el sábado.",
-  "assigned_advisor": "asesor_humano_lima@automotriz.pe"
-}
+export type GuardarLeadOutput = z.infer<typeof GuardarLeadOutputSchema>;
 ```
 
----
-
-### 1.4 Endpoint de Feedback Loop
-- **Ruta**: `POST /api/v1/feedback`
-- **Descripción**: Registra evaluaciones de calidad de respuesta post-ejecución dadas por el usuario.
-
-#### Request Schema (Pydantic: `FeedbackRequest`)
+#### Payload Example
 ```json
+// Input
 {
-  "session_id": "sess_9b1deb4d-3b7d-4bad-9bdd-2b0d7b3dcb6d",
-  "message_id": 4,
-  "thumbs_up": true,
-  "rating": 5,
-  "comment": "Explicación muy clara sobre el consumo de híbridos vs gasolina",
-  "trace_id": "trace_01j7abcde"
-}
-```
-
----
-
-## 2. Contratos de Entrada/Salida (I/O) de Herramientas (Agent Tools)
-
-Las herramientas replican exactamente las firmas y responsabilidades del workflow de n8n con tipado estricto:
-
-### 2.1 Herramienta `guardar_lead`
-- **Propósito**: Guarda o actualiza la ficha del lead/usuario en la base de datos de gestión. Se invoca silenciosamente cuando el usuario comparte su nombre, tipo de vehículo de interés, uso o cuando avanza en su intención de compra.
-
-#### Input Schema (Pydantic: `GuardarLeadInput`)
-```json
-{
-  "session_id": "sess_9b1deb4d-3b7d-4bad-9bdd-2b0d7b3dcb6d",
-  "nombre": "Carlos Mendoza",
-  "tipo_vehiculo_interes": "SUV",
-  "uso_principal": "Familiar",
+  "session_id": "sess_8941a3",
+  "nombre": "Mariana Gómez",
+  "tipo_vehiculo_interes": "SUV híbrida",
+  "uso_principal": "Uso familiar y carretera",
   "etapa": "INTERES_CONCRETO"
 }
-```
 
-| Parámetro | Tipo | Requerido | Descripción |
-| :--- | :--- | :--- | :--- |
-| `session_id` | `string` | Sí | Identificador de sesión activa. |
-| `nombre` | `string` | No (default: `""`) | Nombre proporcionado por el usuario. |
-| `tipo_vehiculo_interes` | `string` | No (default: `""`) | Tipo de carrocería o segmento (SUV, sedán, pickup, etc.). |
-| `uso_principal` | `string` | No (default: `""`) | Destino de uso (ciudad, viajes familiares, trabajo). |
-| `etapa` | `enum` (`DESCUBRIMIENTO`, `INTERES_CONCRETO`) | No (default: `DESCUBRIMIENTO`) | Nivel de avance en el embudo. |
-
-#### Output Schema (Pydantic: `GuardarLeadOutput`)
-```json
+// Output
 {
   "status": "success",
   "message": "Lead guardado correctamente",
   "lead": {
-    "session_id": "sess_9b1deb4d-3b7d-4bad-9bdd-2b0d7b3dcb6d",
-    "nombre": "Carlos Mendoza",
-    "tipo_vehiculo": "SUV",
-    "uso": "Familiar",
+    "session_id": "sess_8941a3",
+    "nombre": "Mariana Gómez",
+    "tipo_vehiculo": "SUV híbrida",
+    "uso": "Uso familiar y carretera",
     "etapa": "INTERES_CONCRETO"
   }
 }
@@ -139,58 +172,238 @@ Las herramientas replican exactamente las firmas y responsabilidades del workflo
 
 ---
 
-### 2.2 Herramienta `solicitar_contacto_humano` (HITL)
-- **Propósito**: Genera un ticket de derivación asistida hacia un asesor humano cuando el usuario solicita un test drive, requiere una cotización formal o prefiere ser atendido por una persona.
+### 3.2 Tool: `solicitar_contacto_humano` (HITL)
+* **Description:** Generates a Human-in-the-Loop escalation ticket (`TICK-XXXXX`) when the user requests a test drive, asks for a formal written quotation, expresses immediate purchase intent with a human, or when the request exceeds bot capabilities.
 
-#### Input Schema (Pydantic: `SolicitarContactoHumanoInput`)
-```json
-{
-  "session_id": "sess_9b1deb4d-3b7d-4bad-9bdd-2b0d7b3dcb6d",
-  "motivo": "TEST_DRIVE",
-  "resumen_requerimiento": "Cliente solicita agendar test drive para una SUV híbrida el fin de semana."
-}
+#### Input Schema (Zod)
+```typescript
+export const SolicitarContactoHumanoInputSchema = z.object({
+  session_id: z.string().describe("Current active session ID"),
+  motivo: z.enum([
+    "TEST_DRIVE",
+    "COTIZACION_FORMAL",
+    "ESCALADO_HUMANO",
+    "CONSULTA_FUERA_DE_ALCANCE"
+  ]).default("ESCALADO_HUMANO").describe("Reason for human agent escalation"),
+  resumen_requerimiento: z.string().describe("Concise summary of customer needs, vehicle of interest, and pending request")
+});
+
+export type SolicitarContactoHumanoInput = z.infer<typeof SolicitarContactoHumanoInputSchema>;
 ```
 
-| Parámetro | Tipo | Requerido | Descripción |
-| :--- | :--- | :--- | :--- |
-| `session_id` | `string` | Sí | Identificador de sesión. |
-| `motivo` | `enum` (`TEST_DRIVE`, `COTIZACION_FORMAL`, `ESCALADO_HUMANO`, `QUEJA_O_DISCONFORMIDAD`) | Sí | Razón de la derivación. |
-| `resumen_requerimiento`| `string` | Sí | Síntesis concisa del contexto y preferencia del usuario. |
+#### Output Schema (Zod)
+```typescript
+export const SolicitarContactoHumanoOutputSchema = z.object({
+  status: z.literal("ticket_created"),
+  ticket_id: z.string().regex(/^TICK-\d{5}$/),
+  session_id: z.string(),
+  motivo: z.string(),
+  resumen: z.string()
+});
 
-#### Output Schema (Pydantic: `SolicitarContactoHumanoOutput`)
+export type SolicitarContactoHumanoOutput = z.infer<typeof SolicitarContactoHumanoOutputSchema>;
+```
+
+#### Payload Example
 ```json
+// Input
+{
+  "session_id": "sess_8941a3",
+  "motivo": "TEST_DRIVE",
+  "resumen_requerimiento": "Mariana Gómez solicita agendar un test drive para una SUV híbrida durante el fin de semana."
+}
+
+// Output
 {
   "status": "ticket_created",
-  "ticket_id": "TICK-48201",
-  "session_id": "sess_9b1deb4d-3b7d-4bad-9bdd-2b0d7b3dcb6d",
+  "ticket_id": "TICK-48192",
+  "session_id": "sess_8941a3",
   "motivo": "TEST_DRIVE",
-  "resumen": "Cliente solicita agendar test drive para una SUV híbrida el fin de semana."
+  "resumen": "Mariana Gómez solicita agendar un test drive para una SUV híbrida durante el fin de semana."
 }
 ```
 
 ---
 
-### 2.3 Herramienta `base_conocimientos_autos` (RAG)
-- **Propósito**: Repositorio de documentación automotriz general. Contiene guías de segmentos (SUV vs. Sedán vs. Hatchback vs. Pickup), tipos de motorización (gasolina, híbridos HEV/PHEV, eléctricos BEV), rendimiento y glosario técnico.
+### 3.3 Tool: `base_conocimientos_autos` (RAG Retrieval)
+* **Description:** Vector and semantic document store containing unbiased automotive technical guides (body types, engine variants, fuel efficiency tips, maintenance basics, and glossary). Must be queried before offering technical explanations.
 
-#### Input Schema (Pydantic: `RAGQueryInput`)
+#### Input Schema (Zod)
+```typescript
+export const AutomotiveRAGInputSchema = z.object({
+  query: z.string().describe("Semantic search query regarding vehicle specifications, categories, engines, or maintenance"),
+  top_k: z.number().int().min(1).max(5).default(3).describe("Number of relevant document chunks to retrieve")
+});
+
+export type AutomotiveRAGInput = z.infer<typeof AutomotiveRAGInputSchema>;
+```
+
+#### Output Schema (Zod)
+```typescript
+export const AutomotiveRAGOutputSchema = z.object({
+  status: z.enum(["success", "no_results_found"]),
+  results_count: z.number(),
+  documents: z.array(z.object({
+    id: z.string(),
+    category: z.string(),
+    title: z.string(),
+    content: z.string(),
+    relevance_score: z.number()
+  }))
+});
+
+export type AutomotiveRAGOutput = z.infer<typeof AutomotiveRAGOutputSchema>;
+```
+
+---
+
+## 4. REST & SSE API Contracts
+
+### 4.1 `POST /api/v1/chat` (Standard JSON Turn)
+Executes a conversational turn synchronously.
+
+- **Request Body (`application/json`):**
 ```json
 {
-  "query": "diferencias entre SUV y Sedan para uso familiar",
-  "top_k": 3
+  "session_id": "sess_8941a3",
+  "message": "Hola, estoy buscando una camioneta para viajar con mis hijos",
+  "model": "gemini-1.5-pro"
 }
 ```
 
-#### Output Schema (Pydantic: `RAGQueryOutput`)
+- **Response (`200 OK` - `application/json`):**
 ```json
 {
-  "results": [
-    {
-      "id": "doc_suv_vs_sedan",
-      "topic": "Comparativa de Carrocerías",
-      "content": "Las SUV ofrecen mayor despeje del suelo, posición de manejo elevada y facilidad de carga...",
-      "relevance_score": 0.92
-    }
-  ]
+  "session_id": "sess_8941a3",
+  "message": {
+    "id": "msg_01J8F",
+    "role": "assistant",
+    "content": "¡Hola! 👋 Qué gran plan buscar un auto para la familia. Para viajes con niños, una SUV suele ser muy cómoda por espacio y seguridad. ¿Con quién tengo el gusto?",
+    "created_at": "2026-09-16T15:30:00.000Z"
+  },
+  "lead": {
+    "tipo_vehiculo": "SUV",
+    "uso": "Familia / Viajes",
+    "etapa": "DESCUBRIMIENTO"
+  },
+  "hitl": null,
+  "telemetry": {
+    "trace_id": "4bf92f3577b34da6a3ce929d0e0e4736",
+    "latency_ms": 780,
+    "input_tokens": 285,
+    "output_tokens": 48,
+    "total_tokens": 333
+  }
 }
+```
+
+---
+
+### 4.2 `POST /api/v1/chat/stream` (Server-Sent Events)
+Streams tokens in real time to the frontend using multi-event SSE protocol.
+
+- **Request Body:** Same as `POST /api/v1/chat`.
+- **Response Headers:** `Content-Type: text/event-stream`, `Cache-Control: no-cache`.
+- **Event Stream Format:**
+```
+event: text_delta
+data: {"text": "¡Hola"}
+
+event: text_delta
+data: {"text": "! 👋 Qué"}
+
+event: tool_call
+data: {"tool": "guardar_lead", "input": {"tipo_vehiculo_interes": "SUV", "uso_principal": "Viajes familiares"}}
+
+event: tool_result
+data: {"tool": "guardar_lead", "output": {"status": "success"}}
+
+event: hitl_interrupt
+data: {"ticket_id": "TICK-48192", "motivo": "TEST_DRIVE", "resumen": "Mariana Gómez solicita test drive"}
+
+event: telemetry
+data: {"trace_id": "4bf92f3577b34da6a3ce929d0e0e4736", "latency_ms": 840, "input_tokens": 310, "output_tokens": 52, "total_tokens": 362}
+
+event: done
+data: {"session_id": "sess_8941a3"}
+```
+
+---
+
+### 4.3 `GET /api/v1/leads/{session_id}`
+Retrieves currently captured lead state for the live sidebar.
+
+- **Response (`200 OK`):**
+```json
+{
+  "id": "lead_91823",
+  "session_id": "sess_8941a3",
+  "name": "Mariana Gómez",
+  "vehicle_type_interest": "SUV híbrida",
+  "primary_use": "Familiar y viajes",
+  "stage": "INTERES_CONCRETO",
+  "status": "QUALIFIED",
+  "updated_at": "2026-09-16T15:32:10.000Z"
+}
+```
+
+---
+
+### 4.4 `GET /api/v1/hitl/tickets/{ticket_id}` & `PATCH /api/v1/hitl/tickets/{ticket_id}`
+Retrieves or updates status of an escalation ticket.
+
+- **Patch Body (`application/json`):**
+```json
+{
+  "status": "RESOLVED",
+  "operator_notes": "Cliente contactado telefónicamente. Test drive agendado para sábado 10:00 AM."
+}
+```
+
+---
+
+### 4.5 `POST /api/v1/feedback`
+Submits user feedback linked to a specific session and message.
+
+- **Request Body (`application/json`):**
+```json
+{
+  "session_id": "sess_8941a3",
+  "message_id": "msg_01J8F",
+  "is_positive": true,
+  "rating": 5,
+  "comment": "Explicó la diferencia entre híbrido convencional y enchufable con mucha claridad."
+}
+```
+
+---
+
+### 4.6 `GET /api/v1/telemetry/traces`
+Provides execution traces for the in-app telemetry dashboard.
+
+- **Response (`200 OK`):**
+```json
+[
+  {
+    "trace_id": "4bf92f3577b34da6a3ce929d0e0e4736",
+    "session_id": "sess_8941a3",
+    "model_name": "gemini-1.5-pro",
+    "latency_ms": 840,
+    "input_tokens": 310,
+    "output_tokens": 52,
+    "total_tokens": 362,
+    "tools_called": [
+      {
+        "name": "guardar_lead",
+        "duration_ms": 12,
+        "status": "SUCCESS"
+      }
+    ],
+    "guardrails_result": {
+      "passed": true,
+      "checks": ["injection", "out_of_scope", "anti_loop"]
+    },
+    "created_at": "2026-09-16T15:32:10.000Z"
+  }
+]
 ```
