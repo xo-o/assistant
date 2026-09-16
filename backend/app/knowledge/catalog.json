@@ -1,0 +1,68 @@
+[
+  {
+    "id": "body_suv_vs_sedan",
+    "topic": "Comparativa de Carrocerías: SUV vs Sedán",
+    "keywords": ["suv", "sedan", "diferencia", "carroceria", "familia", "espacio", "despeje", "maletera", "comodidad"],
+    "content": "Las SUV (Sport Utility Vehicles) ofrecen una posición de manejo elevada, excelente visibilidad panorámica, mayor despeje del suelo para pistas irregulares y gran versatilidad de carga con maleteras amplias. Son ideales para familias y viajes. Por su parte, los Sedanes brindan un centro de gravedad más bajo, lo que se traduce en mayor estabilidad en carretera, marcha más suave y silenciosa, y una cajuela independiente y segura para equipaje, consumiendo generalmente menos combustible gracias a su mejor aerodinámica."
+  },
+  {
+    "id": "body_hatchback_city",
+    "topic": "Carrocería Hatchback: Maniobrabilidad Urbana",
+    "keywords": ["hatchback", "compacto", "ciudad", "estacionar", "urbano", "primer auto", "juvenil", "consumo"],
+    "content": "Los Hatchbacks son vehículos compactos de 3 o 5 puertas donde el habitáculo y el baúl comparten el mismo volumen. Su longitud contenida facilita el tránsito urbano denso y maniobras de estacionamiento en espacios reducidos. Destacan por su agilidad, bajo consumo de combustible y un portón trasero que permite abatir asientos para cargar objetos voluminosos ocasionalmente. Es la elección predilecta para uso personal, parejas jóvenes y trayectos cotidianos dentro de la ciudad."
+  },
+  {
+    "id": "body_pickup_work",
+    "topic": "Carrocerías Pick-Up: Carga, Trabajo y Todoterreno",
+    "keywords": ["pickup", "camioneta", "tolva", "carga", "trabajo", "4x4", "traccion", "remolque", "campo", "mineria"],
+    "content": "Las camionetas Pick-Up cuentan con un chasis de largueros robusto y una caja de carga o tolva trasera separada de la cabina. Ofrecen alta capacidad de carga útil (comúnmente entre 800 kg y más de 1 tonelada) y excelente capacidad de arrastre. Suelen equipar tracción 4x4 con reductora, siendo indispensables para trabajos comerciales, agroindustria, obras civiles y caminos de trocha o alta montaña."
+  },
+  {
+    "id": "body_crossover",
+    "topic": "Crossovers: Lo mejor de dos mundos",
+    "keywords": ["crossover", "cuv", "compacta", "urbano", "despeje", "suv pequeña"],
+    "content": "Un Crossover está construido sobre una plataforma monocasco de automóvil tradicional pero adopta la estética, despeje elevado y postura de una SUV. Ofrece el confort de marcha y rendimiento de combustible de un auto liviano junto con la practicidad de superar baches y badenes sin raspar la parte baja del auto."
+  },
+  {
+    "id": "engine_ice_gasoline",
+    "topic": "Motorización a Gasolina (Combustión Interna)",
+    "keywords": ["gasolina", "combustion", "nafta", "mantenimiento", "tradicional", "precio inicial"],
+    "content": "Los motores de combustión interna a gasolina continúan siendo la alternativa con menor precio de adquisición inicial y la red de talleres y repuestos más extendida. Su mantenimiento regular es ampliamente conocido. Son recomendables para usuarios con kilometraje moderado (menos de 15,000 km al año) que buscan simplicidad mecánica y disponibilidad total de reabastecimiento rápido."
+  },
+  {
+    "id": "engine_hybrid_hev",
+    "topic": "Vehículos Híbridos Convencionales (HEV)",
+    "keywords": ["hibrido", "hev", "auto-recargable", "ahorro", "bateria", "frenado regenerativo", "trafico", "ciudad"],
+    "content": "Los híbridos convencionales (HEV) combinan un motor de gasolina con un motor eléctrico y una batería que se recarga automáticamente mediante el frenado regenerativo y la inercia, por lo que NO necesitan enchufarse a la corriente. En tráfico citadino pesado logran ahorros de combustible de entre 35% y 50%, ya que arrancan y ruedan a baja velocidad en modo 100% eléctrico silencioso y sin emitir gases."
+  },
+  {
+    "id": "engine_phev",
+    "topic": "Híbridos Enchufables (PHEV)",
+    "keywords": ["phev", "hibrido enchufable", "enchufe", "autonomia electrica", "wallbox"],
+    "content": "Los híbridos enchufables (PHEV) cuentan con baterías de mayor capacidad que permiten recorrer entre 40 y 80 kilómetros en modo 100% eléctrico por carga. Si la batería se agota, el motor de gasolina entra en funcionamiento de manera transparente para continuar el viaje sin ansiedad por autonomía. Requieren disponer de un punto de carga en casa o trabajo para aprovechar su potencial de gasto casi nulo entre semana."
+  },
+  {
+    "id": "engine_ev_electric",
+    "topic": "Vehículos 100% Eléctricos (BEV)",
+    "keywords": ["electrico", "bev", "cero emisiones", "bateria", "carga", "torque", "ecologico"],
+    "content": "Los vehículos 100% eléctricos (BEV) prescinden de motor de combustión y líquidos inflamables. Ofrecen aceleración instantánea y lineal (torque máximo desde cero RPM), funcionamiento extremadamente silencioso y costos de mantenimiento hasta 60% menores al carecer de bujías, aceite, correas y embrague. Su adopción requiere planificar rutas y contar con cargador doméstico."
+  },
+  {
+    "id": "fuel_saving_tips",
+    "topic": "Consejos para Maximizar la Eficiencia de Combustible",
+    "keywords": ["ahorro", "consumo", "gasolina", "eficiencia", "presion llantas", "manejo ecologico"],
+    "content": "Para maximizar el rendimiento por galón: 1) Mantener la presión correcta de los neumáticos (una presión 20% baja eleva el consumo hasta 4%). 2) Acelerar progresivamente y anticipar frenadas aprovechando la inercia. 3) Evitar sobrepeso innecesario en la maletera. 4) Usar el aire acondicionado moderadamente y cerrar ventanas a velocidades superiores a 80 km/h para reducir resistencia aerodinámica."
+  },
+  {
+    "id": "basic_maintenance",
+    "topic": "Plan de Mantenimiento Preventivo Básico",
+    "keywords": ["mantenimiento", "servicio", "cambio de aceite", "frenos", "filtros", "kilometraje", "garantia"],
+    "content": "El mantenimiento preventivo debe realizarse generalmente cada 5,000 km o 10,000 km (o cada 6 meses, lo que ocurra primero). Incluye cambio de aceite de motor y filtro, inspección de filtro de aire y de cabina, revisión del grosor de pastillas de freno, nivel de refrigerante y líquido de frenos, y rotación de neumáticos cada 10,000 km para desgaste uniforme."
+  },
+  {
+    "id": "glossary_safety_systems",
+    "topic": "Glosario de Seguridad Activa: ABS, ESP y ADAS",
+    "keywords": ["abs", "esp", "seguridad", "airbag", "frenos", "control de estabilidad", "adas", "isofix"],
+    "content": "El sistema ABS evita que las ruedas se bloqueen al frenar con fuerza, permitiendo maniobrar el volante. El Control Electrónico de Estabilidad (ESP/ESC) frena ruedas individuales automáticamente si detecta derrape para mantener la trayectoria. Los anclajes ISOFIX aseguran sillas de bebés directamente al chasis. Los sistemas ADAS incluyen frenado autónomo de emergencia y alerta de cambio de carril."
+  }
+]
