@@ -1,0 +1,72 @@
+[
+  {
+    "id": "carroceria-suv-vs-sedan",
+    "category": "carrocerias",
+    "title": "Diferencias clave entre SUV y Sedán",
+    "content": "Las SUV ofrecen mayor despeje del suelo, una posición de manejo elevada y un habitáculo más amplio y versátil, lo que las hace ideales para familias, caminos irregulares y viajes largos. Los Sedanes, por su parte, cuentan con un centro de gravedad más bajo que mejora la estabilidad en carretera a alta velocidad, menor resistencia aerodinámica que se traduce en mejor consumo de combustible, y una maletera cerrada independiente que resguarda el equipaje.",
+    "keywords": ["suv", "sedan", "diferencia", "carroceria", "familia", "maletera", "despeje", "estabilidad"]
+  },
+  {
+    "id": "carroceria-hatchback-vs-crossover",
+    "category": "carrocerias",
+    "title": "Hatchback vs Crossover",
+    "content": "Los Hatchbacks son vehículos compactos de dos volúmenes orientados a agilidad urbana, facilidad de estacionamiento y bajo consumo. Los Crossovers combinan la plataforma y maniobrabilidad de un hatchback con detalles estéticos y suspensión elevada de una SUV, brindando mayor versatilidad en baches o caminos destapados sin penalizar excesivamente el peso ni el rendimiento.",
+    "keywords": ["hatchback", "crossover", "urbano", "ciudad", "estacionar", "dimensiones", "compacto"]
+  },
+  {
+    "id": "carroceria-pickups",
+    "category": "carrocerias",
+    "title": "Guía de Pickups y Camionetas Utilitarias",
+    "content": "Las Pickups destacan por su chasis de largueros robusto y tolva de carga abierta, ideales para trabajo pesado, faenas comerciales o recreación todoterreno. Pueden encontrarse en tracción 4x2 para ciudad y transporte de mercancías, o 4x4 con reductora (caja de transferencia) para terrenos escarpados o remolques pesados.",
+    "keywords": ["pickup", "camioneta", "tolva", "carga", "trabajo", "4x4", "remolque", "pesado"]
+  },
+  {
+    "id": "motor-hibridos-hev-vs-phev",
+    "category": "motorizaciones",
+    "title": "Diferencia entre Híbrido Convencional (HEV) e Híbrido Enchufable (PHEV)",
+    "content": "Un híbrido convencional (HEV) combina motor de combustión y motor eléctrico cuya batería pequeña se recarga sola al frenar y desacelerar, sin necesidad de cables. Un híbrido enchufable (PHEV) posee una batería mucho más grande que se conecta a la red eléctrica o tomacorriente, permitiendo recorrer entre 40 y 80 km en modo 100% eléctrico antes de activar el motor de gasolina.",
+    "keywords": ["hibrido", "hev", "phev", "enchufable", "recargable", "bateria", "electrico", "consumo"]
+  },
+  {
+    "id": "motor-mhev-mild-hybrid",
+    "category": "motorizaciones",
+    "title": "Microhíbridos o Híbridos Ligeros (MHEV)",
+    "content": "Los vehículos Mild Hybrid (MHEV) incorporan un generador eléctrico de 12V o 48V que asiste al motor térmico durante el arranque y la aceleración, pero el motor eléctrico no puede mover las ruedas por sí solo. Reducen el consumo entre un 5% y 10% y optimizan el sistema Start-Stop.",
+    "keywords": ["mhev", "mild hybrid", "microhibrido", "48v", "combustion", "ahorro"]
+  },
+  {
+    "id": "motor-100-electrico-bev",
+    "category": "motorizaciones",
+    "title": "Vehículos 100% Eléctricos a Batería (BEV)",
+    "content": "Los autos eléctricos puros (BEV) prescinden de motor de combustión y tanque de combustible; se propulsan únicamente mediante paquetes de baterías de ion de litio y motores eléctricos. Ofrecen torque instantáneo desde cero revoluciones, funcionamiento silencioso, cero emisiones directas y menores costos por kilómetro y mantenimiento que los motores tradicionales.",
+    "keywords": ["electrico", "bev", "cero emisiones", "bateria", "torque instantaneo", "silencioso", "recarga"]
+  },
+  {
+    "id": "rendimiento-tips-consumo",
+    "category": "rendimiento",
+    "title": "Consejos para Optimizar el Consumo de Combustible",
+    "content": "Para maximizar el rendimiento de combustible se recomienda: mantener una aceleración progresiva y anticipar las frenadas; calibrar los neumáticos a la presión recomendada por el fabricante al menos una vez al mes; evitar peso innecesario en la maletera; y utilizar el aire acondicionado de forma moderada, cerrando ventanillas a más de 60 km/h para reducir el arrastre aerodinámico.",
+    "keywords": ["consumo", "ahorro", "rendimiento", "combustible", "gasolina", "eficiencia", "neumaticos", "presion"]
+  },
+  {
+    "id": "mantenimiento-preventivo-basico",
+    "category": "mantenimiento",
+    "title": "Pautas de Mantenimiento Preventivo Básico",
+    "content": "El mantenimiento preventivo periódico debe realizarse cada 5,000 o 10,000 km (o cada 6 a 12 meses) según el fabricante. Los puntos críticos incluyen el cambio de aceite y filtro de motor, inspección de pastillas y líquido de frenos, rotación y alineación de llantas, y revisión del nivel de refrigerante y batería para evitar fallas mecánicas costosas.",
+    "keywords": ["mantenimiento", "aceite", "filtro", "frenos", "revision", "kilometraje", "preventivo", "llantas"]
+  },
+  {
+    "id": "glosario-torque-vs-potencia",
+    "category": "glosario",
+    "title": "Torque (Nm) vs Potencia (HP o CV)",
+    "content": "El torque o par motor (medido en Newton-metro o Nm) es la fuerza instantánea de empuje para iniciar la marcha, subir pendientes o mover carga pesada. La potencia (medida en caballos de fuerza o HP) determina la velocidad sostenida y la rapidez con la que el motor puede mantener esa fuerza a altas revoluciones.",
+    "keywords": ["torque", "potencia", "hp", "caballos de fuerza", "newton metro", "fuerza", "empuje", "velocidad"]
+  },
+  {
+    "id": "glosario-traccion-fwd-rwd-awd-4wd",
+    "category": "glosario",
+    "title": "Tipos de Tracción: FWD, RWD, AWD y 4WD",
+    "content": "FWD (delantera) es la más común, ligera y eficiente para autos de ciudad. RWD (trasera) ofrece mejor reparto de pesos y tacto deportivo. AWD (tracción integral permanente) distribuye la fuerza a las cuatro ruedas de forma automática según la adherencia, ideal para lluvia y carretera. 4WD (tracción a las cuatro ruedas conectable con caja reductora) está diseñada para todoterreno extremo y terrenos rotos.",
+    "keywords": ["traccion", "fwd", "rwd", "awd", "4wd", "4x4", "integral", "delantera", "trasera", "todoterreno"]
+  }
+]

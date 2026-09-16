@@ -1,0 +1,47 @@
+import { FunctionTool } from "@google/adk";
+import { z } from "zod";
+import { repository } from "../db/repository.js";
+
+export const GuardarLeadParamsSchema = z.object({
+  session_id: z.string().optional().describe("ID de la sesión actual"),
+  nombre: z.string().optional().describe("Nombre del usuario si lo ha indicado"),
+  canal_contacto: z.string().optional().describe("Canal de contacto o identificador"),
+  tipo_vehiculo_interes: z.string().optional().describe("Tipo de vehículo de interés (ej. SUV, Sedán, Pickup, Híbrido)"),
+  uso_principal: z.string().optional().describe("Uso principal que le dará al auto (ej. Ciudad, Familia, Trabajo, Viajes)"),
+  etapa: z.enum(["DESCUBRIMIENTO", "INTERES_CONCRETO"]).optional().default("DESCUBRIMIENTO").describe("Etapa del lead en el embudo"),
+});
+
+export type GuardarLeadParams = z.infer<typeof GuardarLeadParamsSchema>;
+
+export function createGuardarLeadTool(contextSessionId?: string): FunctionTool {
+  return new FunctionTool({
+    name: "guardar_lead",
+    description:
+      "Guarda o actualiza la ficha del lead/usuario en la base de datos de gestión. Utilízala cuando el usuario proporcione su nombre, tipo de carrocería o modelo de interés, o cuando avance su nivel de intención.",
+    parameters: GuardarLeadParamsSchema as any,
+    execute: async (args: any) => {
+      const parsed = GuardarLeadParamsSchema.parse(args);
+      const sessionId = parsed.session_id || contextSessionId || "session_default";
+      const leadRecord = repository.saveOrUpdateLead({
+        sessionId,
+        name: parsed.nombre,
+        contactChannel: parsed.canal_contacto,
+        vehicleTypeInterest: parsed.tipo_vehiculo_interes,
+        primaryUse: parsed.uso_principal,
+        stage: parsed.etapa || "DESCUBRIMIENTO",
+      });
+
+      return {
+        status: "success",
+        message: "Lead guardado correctamente",
+        lead: {
+          session_id: sessionId,
+          nombre: leadRecord.name || "",
+          tipo_vehiculo: leadRecord.vehicle_type_interest || "",
+          uso: leadRecord.primary_use || "",
+          etapa: leadRecord.stage,
+        },
+      };
+    },
+  });
+}

@@ -1,0 +1,34 @@
+import dotenv from "dotenv";
+import { z } from "zod";
+
+dotenv.config();
+
+const EnvSchema = z.object({
+  PORT: z.coerce.number().default(8000),
+  HOST: z.string().default("0.0.0.0"),
+  NODE_ENV: z.enum(["development", "production", "test"]).default("development"),
+  GEMINI_API_KEY: z.string().optional(),
+  DEFAULT_MODEL: z.string().default("gemini-1.5-pro"),
+  DATABASE_PATH: z.string().default("./data/automotive_advisor.db"),
+  ENABLE_CLOUD_TRACE: z.coerce.boolean().default(false),
+  GCP_PROJECT_ID: z.string().optional(),
+  CORS_ORIGIN: z.string().default("*"),
+  MAX_HISTORY_TOKENS: z.coerce.number().default(4000),
+  MAX_TURNS_HISTORY: z.coerce.number().default(10),
+});
+
+export type Env = z.infer<typeof EnvSchema>;
+
+export const env: Env = EnvSchema.parse({
+  PORT: process.env.PORT,
+  HOST: process.env.HOST,
+  NODE_ENV: process.env.NODE_ENV,
+  GEMINI_API_KEY: process.env.GEMINI_API_KEY,
+  DEFAULT_MODEL: process.env.DEFAULT_MODEL,
+  DATABASE_PATH: process.env.DATABASE_PATH,
+  ENABLE_CLOUD_TRACE: process.env.ENABLE_CLOUD_TRACE,
+  GCP_PROJECT_ID: process.env.GCP_PROJECT_ID,
+  CORS_ORIGIN: process.env.CORS_ORIGIN,
+  MAX_HISTORY_TOKENS: process.env.MAX_HISTORY_TOKENS,
+  MAX_TURNS_HISTORY: process.env.MAX_TURNS_HISTORY,
+});
