@@ -63,7 +63,7 @@ export class MockAgent {
       return { reply, leadSaved, hitlTicket, ragDocs, toolsCalled };
     }
 
-    // 2. Check for Technical / Comparison questions -> RAG Tool (Prioritize questions before slot extraction)
+    // 2. Check for Technical / Comparison / Financing / Model questions -> RAG Tool
     const isTechnicalQuery =
       lower.includes("diferencia") ||
       lower.includes("cuál es") ||
@@ -74,7 +74,14 @@ export class MockAgent {
       lower.includes("mantenimiento") ||
       lower.includes("torque") ||
       lower.includes("traccion") ||
-      lower.includes("tracción");
+      lower.includes("tracción") ||
+      lower.includes("modelos") ||
+      lower.includes("financiamiento") ||
+      lower.includes("fondo colectivo") ||
+      lower.includes("crédito") ||
+      lower.includes("credito") ||
+      lower.includes("recomiendas") ||
+      lower.includes("cuota");
 
     if (isTechnicalQuery) {
       const start = Date.now();
@@ -94,8 +101,46 @@ export class MockAgent {
         status: "SUCCESS",
       });
 
-      if (docs.length > 0) {
-        // Synthesize in 2-3 concise sentences
+      if (lower.includes("suv") && lower.includes("sed")) {
+        reply = `Las **SUV** y los **Sedanes** responden a necesidades de conducción distintas en el mercado:
+
+| Carrocería | Despeje del Suelo | Consumo / Aerodinámica | Espacio y Habitáculo | Uso Recomendado |
+| :--- | :--- | :--- | :--- | :--- |
+| **SUV** | Elevado (~18 a 21 cm) | Moderado | Mayor altura y maletera versátil | Viajes familiares y caminos irregulares |
+| **Sedán** | Bajo (~14 a 16 cm) | Óptimo (menor arrastre) | Maletera cerrada e independiente | Ciudad, autopista y trayectos diarios |
+
+¿Qué tipo de recorridos sueles realizar con mayor frecuencia: más ciudad para el día a día o viajes familiares por carretera?`;
+      } else if (lower.includes("hibrido") || lower.includes("híbrido") || lower.includes("phev") || lower.includes("hev")) {
+        reply = `La diferencia fundamental entre un híbrido convencional y uno enchufable radica en la batería y la autonomía eléctrica:
+
+| Tecnología | Recarga de Batería | Autonomía 100% Eléctrica | Rendimiento Est. | Enchufe / Cables |
+| :--- | :--- | :--- | :--- | :--- |
+| **Híbrido Convencional (HEV)** | Automática al frenar/desacelerar | 1 a 3 km (apoyo en arranque) | ~60 a 70 km/galón | No requiere cables |
+| **Híbrido Enchufable (PHEV)** | Red eléctrica o tomacorriente | 40 a 80 km puramente eléctrico | Modo dual ultra-eficiente | Cable / Wallbox |
+
+¿Cuentas con punto de carga en tu cochera o prefieres la practicidad de un híbrido que se recargue solo al conducir?`;
+      } else if (lower.includes("financiamiento") || lower.includes("fondo") || lower.includes("credito") || lower.includes("crédito") || lower.includes("banco")) {
+        reply = `En Perú dispones de tres alternativas principales para adquirir tu auto:
+
+| Modalidad | Cuota Inicial | Intereses Financieros | Entrega del Auto | Perfil Recomendado |
+| :--- | :--- | :--- | :--- | :--- |
+| **Crédito Vehicular** | 10% a 20% | Intereses bancarios (TEA) | Inmediata tras aprobación | Quien necesita el vehículo hoy mismo |
+| **Fondos Colectivos** | Mínima o sin inicial | Cuota administrativa plana | Sorteo o remate mensual | Quien planifica su compra y busca cuotas bajas |
+| **Compra al Contado** | 100% | Cero costos financieros | Inmediata | Quien cuenta con liquidez disponible |
+
+¿Te gustaría que evaluemos cuál de estas opciones se adapta mejor a tu flujo mensual estimado?`;
+      } else if (lower.includes("suv") && (lower.includes("recomiendas") || lower.includes("modelos") || lower.includes("peru") || lower.includes("cuota"))) {
+        reply = `En el mercado peruano existen opciones muy destacadas para familias según tu rango de cuota:
+
+| Modelo | Segmento | Cuota Ref. | Motor / Potencia | Característica Destacada |
+| :--- | :--- | :--- | :--- | :--- |
+| **Toyota RAV4** | SUV Mediana | Desde $699 / S/ 2,376 | 2.0L o Híbrido (HEV) | Gran reventa y confiabilidad |
+| **KIA Sportage NQ5** | SUV Mediana | Desde $629 / S/ 2,138 | 2.0L o 1.6L Turbo | Diseño vanguardista y confort |
+| **Toyota Rush** | SUV 3 Filas | Desde $459 / S/ 1,560 | 1.5L Dual VVT-i | 7 asientos para toda la familia |
+| **Volkswagen T-Cross** | SUV Compacta | Desde $459 / S/ 1,560 | 1.0 TSI Turbo | 5 estrellas Latin NCAP |
+
+¿Buscas una SUV de 5 plazas o te interesaría evaluar alternativas de 3 filas para 7 pasajeros?`;
+      } else if (docs.length > 0) {
         const best = docs[0];
         reply = `${best.content} ¿Te gustaría profundizar en algún detalle específico de este modelo o equipamiento?`;
       } else {

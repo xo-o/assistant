@@ -68,5 +68,33 @@
     "title": "Tipos de Tracción: FWD, RWD, AWD y 4WD",
     "content": "FWD (delantera) es la más común, ligera y eficiente para autos de ciudad. RWD (trasera) ofrece mejor reparto de pesos y tacto deportivo. AWD (tracción integral permanente) distribuye la fuerza a las cuatro ruedas de forma automática según la adherencia, ideal para lluvia y carretera. 4WD (tracción a las cuatro ruedas conectable con caja reductora) está diseñada para todoterreno extremo y terrenos rotos.",
     "keywords": ["traccion", "fwd", "rwd", "awd", "4wd", "4x4", "integral", "delantera", "trasera", "todoterreno"]
+  },
+  {
+    "id": "catalogo-suvs-peru",
+    "category": "modelos_peru",
+    "title": "SUVs Populares y Cuotas Referenciales en el Mercado Peruano",
+    "content": "En el mercado peruano destacan las siguientes SUVs: **Toyota RAV4** (motor 2.0L o Híbrido, cuotas referenciales desde $699 / S/ 2,376, ideal para familias y viajes), **Toyota Rush** (3 filas / 7 pasajeros, tracción posterior, cuotas desde $459 / S/ 1,560), **Volkswagen T-Cross** (motor 1.0 TSI Turbo, cuotas desde $459 / S/ 1,560, excelente seguridad 5 estrellas Latin NCAP), **Volkswagen Taos** (1.4 TSI Turbo 150 HP, cuotas desde $629 / S/ 2,138), **KIA Sportage NQ5** (cuotas desde $629 / S/ 2,138, diseño vanguardista y confort) y **Mazda CX-5** (cuotas desde $569 / S/ 1,934, acabados de alta gama y dinamismo de manejo).",
+    "keywords": ["suv", "rav4", "rush", "t-cross", "taos", "sportage", "cx-5", "peru", "cuota", "precios", "toyota", "volkswagen", "kia", "mazda"]
+  },
+  {
+    "id": "catalogo-sedanes-urbanos-peru",
+    "category": "modelos_peru",
+    "title": "Sedanes y Autos Urbanos Económicos en Perú",
+    "content": "Para ciudad y desplazamientos de bajo consumo destacan: **Toyota Yaris Sedán** (motor 1.3L/1.5L, cuota referencial desde $389 / S/ 1,322, líder en valor de reventa), **Volkswagen Virtus** (motor 1.6L o 1.0 TSI, maletera de 521 litros, cuota desde $389 / S/ 1,322), **KIA Soluto** (motor 1.4L, cuota desde $259 / S/ 880, muy accesible para primer auto), **Suzuki Swift** (cuota desde $289 / S/ 982, gran maniobrabilidad urbana) y **Toyota Agya** (cuota desde $259 / S/ 880).",
+    "keywords": ["sedan", "yaris", "virtus", "soluto", "swift", "agya", "urbano", "ciudad", "cuota", "bajo consumo", "economico"]
+  },
+  {
+    "id": "catalogo-pickups-peru",
+    "category": "modelos_peru",
+    "title": "Pickups Líderes para Trabajo y Aventura en Perú",
+    "content": "Las camionetas utilitarias más demandadas en Perú son: **Toyota Hilux** (chasis de largueros reforzado, motor 2.4L / 2.8L Turbodiésel, tracción 4x4, cuotas referenciales desde $629 / S/ 2,138, referencia indiscutible en minería y agro), **Volkswagen Amarok V6** (motor 3.0 V6 TDI 258 HP, tracción integral 4Motion, cuotas desde $899 / S/ 3,056) y **Mitsubishi L200** (cuotas desde $569 / S/ 1,934, robusta para caminos difíciles).",
+    "keywords": ["pickup", "hilux", "amarok", "l200", "4x4", "tolva", "trabajo", "diesel", "turbodiesel", "carga"]
+  },
+  {
+    "id": "financiamiento-modalidades-peru",
+    "category": "financiamiento",
+    "title": "Modalidades de Financiamiento Automotriz en Perú: Crédito vs Fondos Colectivos vs Contado",
+    "content": "En Perú existen tres modalidades principales para adquirir un vehículo: 1) **Crédito Vehicular Bancario**: Exige cuota inicial (10% a 20%), cobra intereses financieros (TEA bancaria), pero permite entrega inmediata tras aprobación. 2) **Fondos Colectivos**: Sistema de ahorro programado sin intereses bancarios tradicionales (solo cuota administrativa plana), con cuotas mensuales más accesibles y adjudicación mensual por sorteo o remate (ideal para quien no tiene apuro inmediato y busca no sobreendeudarse). 3) **Compra al Contado**: Cero costos financieros, pero requiere desembolso total de liquidez en un solo pago.",
+    "keywords": ["financiamiento", "credito", "fondo colectivo", "banco", "cuota inicial", "intereses", "remate", "sorteo", "adjudicacion", "contado"]
   }
 ]
