@@ -4,7 +4,7 @@
 **Validación y Esquemas:** Zod (Tipado Estricto de Contratos)  
 **Frontend:** React 19 + Next.js + Tailwind CSS + `assistant-ui`  
 **Observabilidad:** OpenTelemetry SDK nativo con exportador a Google Cloud Trace  
-**Persistencia:** SQLite en modo WAL (Tablas y campos en inglés) con soporte PostgreSQL  
+**Persistencia:** Drizzle ORM + Supabase PostgreSQL (Tablas y campos en inglés)  
 
 ---
 
@@ -139,6 +139,16 @@ PORT=8000
 > *Nota:* Si no configuras una API key, el sistema utiliza automáticamente el **Mock Agent Offline**, permitiendo probar la aplicación, herramientas y tests unitarios sin costo ni dependencias de red.
 
 ---
+
+### Migraciones de Base de Datos (Drizzle ORM)
+El proyecto utiliza **Drizzle ORM** conectado a Supabase PostgreSQL (con soporte para Transaction Pooler en puerto 6543 mediante `prepare: false`):
+```bash
+cd backend
+npm run db:generate   # Genera migraciones SQL en /migrations
+npm run db:push       # Aplica directamente el esquema a Supabase PostgreSQL
+npm run db:migrate    # Ejecuta migraciones pendientes
+npm run db:studio     # Abre Drizzle Studio para explorar la base de datos
+```
 
 ### Opción A: Ejecución Local
 

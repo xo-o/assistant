@@ -7,12 +7,12 @@ import { closeDatabase } from "../src/db/database.js";
 describe("Agent Orchestrator Integration Suite", () => {
   const sessionId = "sess_e2e_carlos_" + Math.random().toString(36).slice(2, 9);
 
-  before(() => {
-    repository.ensureSession(sessionId);
+  before(async () => {
+    await repository.ensureSession(sessionId);
   });
 
-  after(() => {
-    closeDatabase();
+  after(async () => {
+    await closeDatabase();
   });
 
   it("TC-01: First Turn - Unidentified User Greeting should ask for name", async () => {
@@ -40,11 +40,11 @@ describe("Agent Orchestrator Integration Suite", () => {
     assert.strictEqual(res.sessionId, sessionId);
     assert.ok(res.lead);
     assert.strictEqual(res.lead.name, "Carlos");
-    assert.strictEqual(res.lead.vehicle_type_interest, "SUV");
+    assert.strictEqual(res.lead.vehicleTypeInterest, "SUV");
     assert.ok(res.message.content.includes("Carlos"));
 
     // Verify lead in DB
-    const leadInDb = repository.getLeadBySessionId(sessionId);
+    const leadInDb = await repository.getLeadBySessionId(sessionId);
     assert.ok(leadInDb);
     assert.strictEqual(leadInDb.name, "Carlos");
   });
@@ -72,13 +72,13 @@ describe("Agent Orchestrator Integration Suite", () => {
 
     assert.strictEqual(res.sessionId, sessionId);
     assert.ok(res.hitl);
-    assert.match(res.hitl.ticket_code!, /^TICK-\d{5}$/);
+    assert.match(res.hitl.ticketCode!, /^TICK-\d{5}$/);
     assert.strictEqual(res.hitl.reason, "TEST_DRIVE");
     assert.strictEqual(res.hitl.status, "PENDING");
-    assert.ok(res.message.content.includes(res.hitl.ticket_code!));
+    assert.ok(res.message.content.includes(res.hitl.ticketCode!));
 
     // Verify ticket in DB
-    const ticketInDb = repository.getHitlTicketByCode(res.hitl.ticket_code!);
+    const ticketInDb = await repository.getHitlTicketByCode(res.hitl.ticketCode!);
     assert.ok(ticketInDb);
   });
 
@@ -97,12 +97,12 @@ describe("Agent Orchestrator Integration Suite", () => {
   });
 
   it("TC-10: OpenTelemetry Trace should be recorded in database", async () => {
-    const traces = repository.listTraces(sessionId, 5);
+    const traces = await repository.listTraces(sessionId, 5);
     assert.ok(traces.length >= 4);
     const latestTrace = traces[0];
-    assert.strictEqual(latestTrace.session_id, sessionId);
-    assert.ok(latestTrace.trace_id);
-    assert.ok(latestTrace.latency_ms >= 0);
-    assert.ok(latestTrace.total_tokens > 0);
+    assert.strictEqual(latestTrace.sessionId, sessionId);
+    assert.ok(latestTrace.traceId);
+    assert.ok(latestTrace.latencyMs >= 0);
+    assert.ok(latestTrace.totalTokens > 0);
   });
 });

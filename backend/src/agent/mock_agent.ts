@@ -1,4 +1,5 @@
-import { repository, LeadRecord } from "../db/repository.js";
+import { repository } from "../db/repository.js";
+import { Lead } from "../db/schema.js";
 import { ragEngine } from "../knowledge/rag_engine.js";
 
 export interface MockAgentExecutionResult {
@@ -16,7 +17,7 @@ export interface MockAgentExecutionResult {
 }
 
 export class MockAgent {
-  async execute(sessionId: string, message: string, existingLead: LeadRecord | null): Promise<MockAgentExecutionResult> {
+  async execute(sessionId: string, message: string, existingLead: Lead | null): Promise<MockAgentExecutionResult> {
     const trimmed = message.trim();
     const lower = trimmed.toLowerCase();
     const toolsCalled: MockAgentExecutionResult["toolsCalled"] = [];
@@ -31,7 +32,7 @@ export class MockAgent {
       const motivo = lower.includes("test drive") ? "TEST_DRIVE" : lower.includes("cotizacion") ? "COTIZACION_FORMAL" : "ESCALADO_HUMANO";
       const resumen = `El cliente solicita ${motivo === "TEST_DRIVE" ? "agendar un test drive" : "una cotización formal"} para el vehículo de su interés.`;
       
-      const ticket = repository.createHitlTicket({
+      const ticket = await repository.createHitlTicket({
         sessionId,
         reason: motivo,
         requirementSummary: resumen,
@@ -39,7 +40,7 @@ export class MockAgent {
 
       hitlTicket = {
         status: "ticket_created",
-        ticket_id: ticket.ticket_code,
+        ticket_id: ticket.ticketCode,
         session_id: sessionId,
         motivo,
         resumen,
@@ -54,9 +55,9 @@ export class MockAgent {
       });
 
       if (motivo === "TEST_DRIVE") {
-        reply = `¡Excelente iniciativa! He generado tu solicitud formal de test drive con el código ${ticket.ticket_code}. Un asesor humano se comunicará contigo para coordinar el día y horario que te quede más cómodo 😊`;
+        reply = `¡Excelente iniciativa! He generado tu solicitud formal de test drive con el código ${ticket.ticketCode}. Un asesor humano se comunicará contigo para coordinar el día y horario que te quede más cómodo 😊`;
       } else {
-        reply = `¡Con gusto! He derivado tu requerimiento para una cotización formal detallada (código ${ticket.ticket_code}). Un especialista del concesionario te enviará los números exactos a la brevedad 😊`;
+        reply = `¡Con gusto! He derivado tu requerimiento para una cotización formal detallada (código ${ticket.ticketCode}). Un especialista del concesionario te enviará los números exactos a la brevedad 😊`;
       }
 
       return { reply, leadSaved, hitlTicket, ragDocs, toolsCalled };
@@ -112,11 +113,11 @@ export class MockAgent {
     if (nameMatch || vehicleMatch || useMatch) {
       const start = Date.now();
       const name = nameMatch ? nameMatch[1] : (existingLead?.name || undefined);
-      const vehicle = vehicleMatch ? vehicleMatch[1].toUpperCase() : (existingLead?.vehicle_type_interest || undefined);
-      const use = useMatch ? useMatch[1] : (existingLead?.primary_use || undefined);
+      const vehicle = vehicleMatch ? vehicleMatch[1].toUpperCase() : (existingLead?.vehicleTypeInterest || undefined);
+      const use = useMatch ? useMatch[1] : (existingLead?.primaryUse || undefined);
       const stage = (vehicle && use) ? "INTERES_CONCRETO" : "DESCUBRIMIENTO";
 
-      const updated = repository.saveOrUpdateLead({
+      const updated = await repository.saveOrUpdateLead({
         sessionId,
         name,
         vehicleTypeInterest: vehicle,
@@ -129,8 +130,8 @@ export class MockAgent {
         lead: {
           session_id: sessionId,
           nombre: updated.name || "",
-          tipo_vehiculo: updated.vehicle_type_interest || "",
-          uso: updated.primary_use || "",
+          tipo_vehiculo: updated.vehicleTypeInterest || "",
+          uso: updated.primaryUse || "",
           etapa: updated.stage,
         },
       };

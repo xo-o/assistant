@@ -1,6 +1,5 @@
 import { describe, it, before, after } from "node:test";
 import assert from "node:assert";
-import fs from "fs";
 import { repository } from "../src/db/repository.js";
 import {
   createGuardarLeadTool,
@@ -10,17 +9,14 @@ import {
 import { closeDatabase } from "../src/db/database.js";
 
 describe("Agent Tools Suite", () => {
-  const testSessionId = "test_sess_tools_123";
+  const testSessionId = "test_sess_tools_" + Math.random().toString(36).slice(2, 9);
 
-  before(() => {
-    repository.ensureSession(testSessionId);
+  before(async () => {
+    await repository.ensureSession(testSessionId);
   });
 
-  after(() => {
-    closeDatabase();
-    if (fs.existsSync("./data/automotive_advisor.db")) {
-      // test db cleanup if needed
-    }
+  after(async () => {
+    await closeDatabase();
   });
 
   describe("guardar_lead Tool", () => {
@@ -40,11 +36,11 @@ describe("Agent Tools Suite", () => {
       assert.strictEqual(result.lead.etapa, "INTERES_CONCRETO");
 
       // Verify in DB
-      const leadFromDb = repository.getLeadBySessionId(testSessionId);
+      const leadFromDb = await repository.getLeadBySessionId(testSessionId);
       assert.ok(leadFromDb);
       assert.strictEqual(leadFromDb.name, "Alejandro Pérez");
-      assert.strictEqual(leadFromDb.vehicle_type_interest, "SUV Híbrida");
-      assert.strictEqual(leadFromDb.primary_use, "Viajes familiares y ciudad");
+      assert.strictEqual(leadFromDb.vehicleTypeInterest, "SUV Híbrida");
+      assert.strictEqual(leadFromDb.primaryUse, "Viajes familiares y ciudad");
       assert.strictEqual(leadFromDb.stage, "INTERES_CONCRETO");
     });
   });
@@ -63,9 +59,9 @@ describe("Agent Tools Suite", () => {
       assert.strictEqual(result.motivo, "TEST_DRIVE");
 
       // Verify in DB
-      const ticketFromDb = repository.getHitlTicketByCode(result.ticket_id);
+      const ticketFromDb = await repository.getHitlTicketByCode(result.ticket_id);
       assert.ok(ticketFromDb);
-      assert.strictEqual(ticketFromDb.ticket_code, result.ticket_id);
+      assert.strictEqual(ticketFromDb.ticketCode, result.ticket_id);
       assert.strictEqual(ticketFromDb.reason, "TEST_DRIVE");
       assert.strictEqual(ticketFromDb.status, "PENDING");
     });

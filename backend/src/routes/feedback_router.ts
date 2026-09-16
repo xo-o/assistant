@@ -12,10 +12,10 @@ const FeedbackSchema = z.object({
   comment: z.string().max(500).optional(),
 });
 
-feedbackRouter.post("/feedback", (req: Request, res: Response) => {
+feedbackRouter.post("/feedback", async (req: Request, res: Response) => {
   try {
     const parsed = FeedbackSchema.parse(req.body);
-    const feedback = repository.saveFeedback({
+    const feedback = await repository.saveFeedback({
       sessionId: parsed.session_id,
       messageId: parsed.message_id,
       isPositive: parsed.is_positive,
@@ -32,8 +32,8 @@ feedbackRouter.post("/feedback", (req: Request, res: Response) => {
   }
 });
 
-feedbackRouter.get("/feedback", (req: Request, res: Response) => {
+feedbackRouter.get("/feedback", async (req: Request, res: Response) => {
   const limit = req.query.limit ? Number(req.query.limit) : 50;
-  const feedbacks = repository.listFeedback(limit);
+  const feedbacks = await repository.listFeedback(limit);
   res.json({ count: feedbacks.length, feedbacks });
 });

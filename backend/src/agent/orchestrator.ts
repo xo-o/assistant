@@ -1,6 +1,7 @@
-import { repository, LeadRecord, HitlTicketRecord } from "../db/repository.js";
+import { repository } from "../db/repository.js";
+import { Lead, HitlTicket } from "../db/schema.js";
 import { checkPromptInjection, checkOutOfScope, applyAntiLoopGuard, applyAntiHallucinationFilter } from "../guardrails/index.js";
-import { recordTraceSpan, getTracer } from "../telemetry/tracer.js";
+import { recordTraceSpan } from "../telemetry/tracer.js";
 import { mockAgent } from "./mock_agent.js";
 import { createLuisAgent } from "./luis_agent.js";
 import { env } from "../config/env.js";
@@ -22,8 +23,8 @@ export interface OrchestratorTurnResponse {
     content: string;
     createdAt: string;
   };
-  lead: Partial<LeadRecord> | null;
-  hitl: Partial<HitlTicketRecord> | null;
+  lead: Partial<Lead> | null;
+  hitl: Partial<HitlTicket> | null;
   telemetry: {
     traceId: string;
     modelName: string;
@@ -51,16 +52,16 @@ export class AgentOrchestrator {
     const modelName = request.model || env.DEFAULT_MODEL;
 
     // 1. Ensure Session
-    repository.ensureSession(sessionId, request.userId);
+    await repository.ensureSession(sessionId, request.userId);
 
     // 2. Persist User Message
-    repository.addMessage({
+    await repository.addMessage({
       sessionId,
       role: "user",
       content: request.message,
     });
 
-    const existingLead = repository.getLeadBySessionId(sessionId);
+    const existingLead = await repository.getLeadBySessionId(sessionId);
 
     // 3. Pre-execution Guardrails: Prompt Injection / Jailbreak
     const injectionCheck = checkPromptInjection(request.message);
@@ -70,14 +71,14 @@ export class AgentOrchestrator {
       const inputTokens = Math.ceil(request.message.length / 4);
       const outputTokens = Math.ceil(refusal.length / 4);
 
-      const assistantMsg = repository.addMessage({
+      const assistantMsg = await repository.addMessage({
         sessionId,
         role: "assistant",
         content: refusal,
         tokenCount: outputTokens,
       });
 
-      repository.saveTrace({
+      await repository.saveTrace({
         traceId,
         sessionId,
         modelName,
@@ -95,7 +96,7 @@ export class AgentOrchestrator {
           id: assistantMsg.id,
           role: "assistant",
           content: refusal,
-          createdAt: assistantMsg.created_at,
+          createdAt: assistantMsg.createdAt.toISOString(),
         },
         lead: existingLead,
         hitl: null,
@@ -120,14 +121,14 @@ export class AgentOrchestrator {
       const inputTokens = Math.ceil(request.message.length / 4);
       const outputTokens = Math.ceil(refusal.length / 4);
 
-      const assistantMsg = repository.addMessage({
+      const assistantMsg = await repository.addMessage({
         sessionId,
         role: "assistant",
         content: refusal,
         tokenCount: outputTokens,
       });
 
-      repository.saveTrace({
+      await repository.saveTrace({
         traceId,
         sessionId,
         modelName,
@@ -145,7 +146,7 @@ export class AgentOrchestrator {
           id: assistantMsg.id,
           role: "assistant",
           content: refusal,
-          createdAt: assistantMsg.created_at,
+          createdAt: assistantMsg.createdAt.toISOString(),
         },
         lead: existingLead,
         hitl: null,
@@ -242,16 +243,16 @@ export class AgentOrchestrator {
         }
 
         // 6. Post-execution Guardrails: Anti-Loop & Anti-Hallucination
-        const recentHistory = repository.getSlidingWindowMessages(sessionId, 4000, 5);
+        const recentHistory = await repository.getSlidingWindowMessages(sessionId, 4000, 5);
         const recentAssistant = recentHistory
           .filter((m) => m.role === "assistant")
           .map((m) => m.content);
 
-        const currentLead = repository.getLeadBySessionId(sessionId);
+        const currentLead = await repository.getLeadBySessionId(sessionId);
         let processedReply = applyAntiLoopGuard(replyText, {
           knownName: currentLead?.name,
-          knownVehicle: currentLead?.vehicle_type_interest,
-          knownUse: currentLead?.primary_use,
+          knownVehicle: currentLead?.vehicleTypeInterest,
+          knownUse: currentLead?.primaryUse,
           recentAssistantMessages: recentAssistant,
         });
 
@@ -268,7 +269,7 @@ export class AgentOrchestrator {
         span.setAttribute("gen_ai.usage.total_tokens", totalTokens);
 
         // 8. Persist Assistant Message
-        const assistantMsg = repository.addMessage({
+        const assistantMsg = await repository.addMessage({
           sessionId,
           role: "assistant",
           content: processedReply,
@@ -277,7 +278,7 @@ export class AgentOrchestrator {
         });
 
         // 9. Save Execution Trace in DB
-        repository.saveTrace({
+        await repository.saveTrace({
           traceId,
           sessionId,
           modelName,
@@ -290,8 +291,8 @@ export class AgentOrchestrator {
         });
 
         // 10. Fetch current lead and latest hitl ticket
-        const latestLead = repository.getLeadBySessionId(sessionId);
-        const latestTickets = repository.listHitlTickets(sessionId, 1);
+        const latestLead = await repository.getLeadBySessionId(sessionId);
+        const latestTickets = await repository.listHitlTickets(sessionId, 1);
         const latestTicket = latestTickets.length > 0 ? latestTickets[0] : null;
 
         return {
@@ -300,7 +301,7 @@ export class AgentOrchestrator {
             id: assistantMsg.id,
             role: "assistant",
             content: processedReply,
-            createdAt: assistantMsg.created_at,
+            createdAt: assistantMsg.createdAt.toISOString(),
           },
           lead: latestLead,
           hitl: latestTicket,

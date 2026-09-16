@@ -22,7 +22,7 @@ export function createGuardarLeadTool(contextSessionId?: string): FunctionTool {
     execute: async (args: any) => {
       const parsed = GuardarLeadParamsSchema.parse(args);
       const sessionId = parsed.session_id || contextSessionId || "session_default";
-      const leadRecord = repository.saveOrUpdateLead({
+      const leadRecord = await repository.saveOrUpdateLead({
         sessionId,
         name: parsed.nombre,
         contactChannel: parsed.canal_contacto,
@@ -37,8 +37,8 @@ export function createGuardarLeadTool(contextSessionId?: string): FunctionTool {
         lead: {
           session_id: sessionId,
           nombre: leadRecord.name || "",
-          tipo_vehiculo: leadRecord.vehicle_type_interest || "",
-          uso: leadRecord.primary_use || "",
+          tipo_vehiculo: leadRecord.vehicleTypeInterest || "",
+          uso: leadRecord.primaryUse || "",
           etapa: leadRecord.stage,
         },
       };

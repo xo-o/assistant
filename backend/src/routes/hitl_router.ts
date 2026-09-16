@@ -9,16 +9,16 @@ const UpdateTicketSchema = z.object({
   operator_notes: z.string().optional(),
 });
 
-hitlRouter.get("/hitl/tickets", (req: Request, res: Response) => {
+hitlRouter.get("/hitl/tickets", async (req: Request, res: Response) => {
   const sessionId = req.query.session_id as string | undefined;
   const limit = req.query.limit ? Number(req.query.limit) : 50;
-  const tickets = repository.listHitlTickets(sessionId, limit);
+  const tickets = await repository.listHitlTickets(sessionId, limit);
   res.json({ count: tickets.length, tickets });
 });
 
-hitlRouter.get("/hitl/tickets/:ticketCode", (req: Request, res: Response) => {
+hitlRouter.get("/hitl/tickets/:ticketCode", async (req: Request, res: Response) => {
   const code = req.params.ticketCode;
-  const ticket = repository.getHitlTicketByCode(code);
+  const ticket = await repository.getHitlTicketByCode(code);
   if (!ticket) {
     res.status(404).json({ error: "Ticket not found", ticketCode: code });
     return;
@@ -26,11 +26,11 @@ hitlRouter.get("/hitl/tickets/:ticketCode", (req: Request, res: Response) => {
   res.json(ticket);
 });
 
-hitlRouter.patch("/hitl/tickets/:ticketCode", (req: Request, res: Response) => {
+hitlRouter.patch("/hitl/tickets/:ticketCode", async (req: Request, res: Response) => {
   try {
     const code = req.params.ticketCode;
     const body = UpdateTicketSchema.parse(req.body);
-    const updated = repository.updateHitlTicket(code, body.status, body.operator_notes);
+    const updated = await repository.updateHitlTicket(code, body.status, body.operator_notes);
     if (!updated) {
       res.status(404).json({ error: "Ticket not found", ticketCode: code });
       return;

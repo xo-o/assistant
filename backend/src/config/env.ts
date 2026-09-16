@@ -9,7 +9,9 @@ const EnvSchema = z.object({
   NODE_ENV: z.enum(["development", "production", "test"]).default("development"),
   GEMINI_API_KEY: z.string().optional(),
   DEFAULT_MODEL: z.string().default("gemini-1.5-pro"),
-  DATABASE_PATH: z.string().default("./data/automotive_advisor.db"),
+  DATABASE_URL: z.string().default(
+    "postgresql://postgres.xwkdsizgxtpxkeuooups:10dbnOndb10@aws-0-us-west-2.pooler.supabase.com:6543/postgres"
+  ),
   ENABLE_CLOUD_TRACE: z.coerce.boolean().default(false),
   GCP_PROJECT_ID: z.string().optional(),
   CORS_ORIGIN: z.string().default("*"),
@@ -25,7 +27,7 @@ export const env: Env = EnvSchema.parse({
   NODE_ENV: process.env.NODE_ENV,
   GEMINI_API_KEY: process.env.GEMINI_API_KEY,
   DEFAULT_MODEL: process.env.DEFAULT_MODEL,
-  DATABASE_PATH: process.env.DATABASE_PATH,
+  DATABASE_URL: process.env.DATABASE_URL,
   ENABLE_CLOUD_TRACE: process.env.ENABLE_CLOUD_TRACE,
   GCP_PROJECT_ID: process.env.GCP_PROJECT_ID,
   CORS_ORIGIN: process.env.CORS_ORIGIN,

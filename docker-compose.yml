@@ -12,12 +12,10 @@ services:
       - NODE_ENV=production
       - GEMINI_API_KEY=${GEMINI_API_KEY:-}
       - DEFAULT_MODEL=${DEFAULT_MODEL:-gemini-1.5-pro}
-      - DATABASE_PATH=/app/data/automotive_advisor.db
+      - DATABASE_URL=${DATABASE_URL:-postgresql://postgres.xwkdsizgxtpxkeuooups:10dbnOndb10@aws-0-us-west-2.pooler.supabase.com:6543/postgres}
       - ENABLE_CLOUD_TRACE=${ENABLE_CLOUD_TRACE:-false}
       - GCP_PROJECT_ID=${GCP_PROJECT_ID:-}
       - CORS_ORIGIN=*
-    volumes:
-      - ./data:/app/data
     restart: unless-stopped
     healthcheck:
       test: ["CMD", "node", "-e", "require('http').get('http://localhost:8000/health', (r) => { process.exit(r.statusCode === 200 ? 0 : 1); })"]

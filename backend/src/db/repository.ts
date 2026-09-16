@@ -1,74 +1,20 @@
-import { getDatabase } from "./database.js";
+import { eq, desc, asc } from "drizzle-orm";
 import { randomUUID } from "crypto";
-
-export interface ChatSessionRecord {
-  id: string;
-  user_id: string | null;
-  title: string | null;
-  created_at: string;
-  updated_at: string;
-  metadata: string | null;
-}
-
-export interface ChatMessageRecord {
-  id: string;
-  session_id: string;
-  role: "user" | "assistant" | "system" | "tool";
-  content: string;
-  token_count: number;
-  tool_calls: string | null;
-  tool_results: string | null;
-  created_at: string;
-}
-
-export interface LeadRecord {
-  id: string;
-  session_id: string;
-  name: string | null;
-  contact_channel: string | null;
-  vehicle_type_interest: string | null;
-  primary_use: string | null;
-  stage: "DESCUBRIMIENTO" | "INTERES_CONCRETO";
-  status: "ACTIVE" | "QUALIFIED" | "CONTACTED";
-  created_at: string;
-  updated_at: string;
-}
-
-export interface HitlTicketRecord {
-  id: string;
-  ticket_code: string;
-  session_id: string;
-  reason: string;
-  requirement_summary: string;
-  status: "PENDING" | "IN_PROGRESS" | "RESOLVED" | "CANCELLED";
-  operator_notes: string | null;
-  created_at: string;
-  updated_at: string;
-}
-
-export interface UserFeedbackRecord {
-  id: string;
-  session_id: string;
-  message_id: string | null;
-  is_positive: number;
-  rating: number | null;
-  comment: string | null;
-  created_at: string;
-}
-
-export interface ExecutionTraceRecord {
-  id: string;
-  trace_id: string;
-  session_id: string;
-  model_name: string;
-  latency_ms: number;
-  input_tokens: number;
-  output_tokens: number;
-  total_tokens: number;
-  tools_called: string | null;
-  guardrails_result: string | null;
-  created_at: string;
-}
+import { getDatabase } from "./database.js";
+import {
+  chatSessions,
+  chatMessages,
+  leads,
+  hitlTickets,
+  userFeedbacks,
+  executionTraces,
+  ChatSession,
+  ChatMessage,
+  Lead,
+  HitlTicket,
+  UserFeedback,
+  ExecutionTrace,
+} from "./schema.js";
 
 export class Repository {
   private get db() {
@@ -76,279 +22,310 @@ export class Repository {
   }
 
   // SESSIONS
-  ensureSession(sessionId: string, userId?: string): ChatSessionRecord {
-    const existing = this.db.prepare("SELECT * FROM chat_sessions WHERE id = ?").get(sessionId) as ChatSessionRecord | undefined;
-    if (existing) {
-      return existing;
+  async ensureSession(sessionId: string, userId?: string): Promise<ChatSession> {
+    const existing = await this.db
+      .select()
+      .from(chatSessions)
+      .where(eq(chatSessions.id, sessionId))
+      .limit(1);
+
+    if (existing.length > 0) {
+      return existing[0];
     }
 
-    const now = new Date().toISOString();
-    this.db.prepare(
-      "INSERT INTO chat_sessions (id, user_id, title, created_at, updated_at) VALUES (?, ?, ?, ?, ?)"
-    ).run(sessionId, userId || null, "Nueva Consulta", now, now);
+    const now = new Date();
+    const [created] = await this.db
+      .insert(chatSessions)
+      .values({
+        id: sessionId,
+        userId: userId || null,
+        title: "Nueva Consulta",
+        createdAt: now,
+        updatedAt: now,
+      })
+      .returning();
 
-    return {
-      id: sessionId,
-      user_id: userId || null,
-      title: "Nueva Consulta",
-      created_at: now,
-      updated_at: now,
-      metadata: null,
-    };
+    return created;
   }
 
-  touchSession(sessionId: string, title?: string): void {
-    const now = new Date().toISOString();
+  async touchSession(sessionId: string, title?: string): Promise<void> {
+    const now = new Date();
     if (title) {
-      this.db.prepare("UPDATE chat_sessions SET updated_at = ?, title = ? WHERE id = ?").run(now, title, sessionId);
+      await this.db
+        .update(chatSessions)
+        .set({ updatedAt: now, title })
+        .where(eq(chatSessions.id, sessionId));
     } else {
-      this.db.prepare("UPDATE chat_sessions SET updated_at = ? WHERE id = ?").run(now, sessionId);
+      await this.db
+        .update(chatSessions)
+        .set({ updatedAt: now })
+        .where(eq(chatSessions.id, sessionId));
     }
   }
 
-  listSessions(limit = 50): ChatSessionRecord[] {
-    return this.db.prepare("SELECT * FROM chat_sessions ORDER BY updated_at DESC LIMIT ?").all(limit) as ChatSessionRecord[];
+  async listSessions(limit = 50): Promise<ChatSession[]> {
+    return await this.db
+      .select()
+      .from(chatSessions)
+      .orderBy(desc(chatSessions.updatedAt))
+      .limit(limit);
   }
 
   // MESSAGES
-  addMessage(params: {
+  async addMessage(params: {
     sessionId: string;
     role: "user" | "assistant" | "system" | "tool";
     content: string;
     tokenCount?: number;
     toolCalls?: unknown;
     toolResults?: unknown;
-  }): ChatMessageRecord {
+  }): Promise<ChatMessage> {
     const id = "msg_" + randomUUID().replace(/-/g, "").slice(0, 16);
-    const now = new Date().toISOString();
     const tokenCount = params.tokenCount ?? Math.ceil(params.content.length / 4);
+    const now = new Date();
 
-    this.db.prepare(
-      `INSERT INTO chat_messages (id, session_id, role, content, token_count, tool_calls, tool_results, created_at)
-       VALUES (?, ?, ?, ?, ?, ?, ?, ?)`
-    ).run(
-      id,
-      params.sessionId,
-      params.role,
-      params.content,
-      tokenCount,
-      params.toolCalls ? JSON.stringify(params.toolCalls) : null,
-      params.toolResults ? JSON.stringify(params.toolResults) : null,
-      now
-    );
+    const [created] = await this.db
+      .insert(chatMessages)
+      .values({
+        id,
+        sessionId: params.sessionId,
+        role: params.role,
+        content: params.content,
+        tokenCount,
+        toolCalls: params.toolCalls ?? null,
+        toolResults: params.toolResults ?? null,
+        createdAt: now,
+      })
+      .returning();
 
-    this.touchSession(params.sessionId);
-
-    return {
-      id,
-      session_id: params.sessionId,
-      role: params.role,
-      content: params.content,
-      token_count: tokenCount,
-      tool_calls: params.toolCalls ? JSON.stringify(params.toolCalls) : null,
-      tool_results: params.toolResults ? JSON.stringify(params.toolResults) : null,
-      created_at: now,
-    };
+    await this.touchSession(params.sessionId);
+    return created;
   }
 
-  getSessionMessages(sessionId: string, limit = 50): ChatMessageRecord[] {
-    return this.db.prepare(
-      "SELECT * FROM chat_messages WHERE session_id = ? ORDER BY rowid ASC LIMIT ?"
-    ).all(sessionId, limit) as ChatMessageRecord[];
+  async getSessionMessages(sessionId: string, limit = 50): Promise<ChatMessage[]> {
+    return await this.db
+      .select()
+      .from(chatMessages)
+      .where(eq(chatMessages.sessionId, sessionId))
+      .orderBy(asc(chatMessages.createdAt))
+      .limit(limit);
   }
 
-  getSlidingWindowMessages(sessionId: string, maxTokens = 4000, maxTurns = 10): ChatMessageRecord[] {
-    // Retrieve recent messages ordered descending to budget tokens
-    const recentMessages = this.db.prepare(
-      "SELECT * FROM chat_messages WHERE session_id = ? ORDER BY rowid DESC LIMIT ?"
-    ).all(sessionId, maxTurns * 2) as ChatMessageRecord[];
+  async getSlidingWindowMessages(
+    sessionId: string,
+    maxTokens = 4000,
+    maxTurns = 10
+  ): Promise<ChatMessage[]> {
+    const recentMessages = await this.db
+      .select()
+      .from(chatMessages)
+      .where(eq(chatMessages.sessionId, sessionId))
+      .orderBy(desc(chatMessages.createdAt))
+      .limit(maxTurns * 2);
 
-    const budgeted: ChatMessageRecord[] = [];
+    const budgeted: ChatMessage[] = [];
     let currentTokens = 0;
 
     for (const msg of recentMessages) {
-      if (currentTokens + msg.token_count > maxTokens) {
+      if (currentTokens + msg.tokenCount > maxTokens) {
         break;
       }
       budgeted.push(msg);
-      currentTokens += msg.token_count;
+      currentTokens += msg.tokenCount;
     }
 
-    // Return in chronological order
     return budgeted.reverse();
   }
 
   // LEADS
-  saveOrUpdateLead(lead: {
+  async saveOrUpdateLead(lead: {
     sessionId: string;
     name?: string;
     contactChannel?: string;
     vehicleTypeInterest?: string;
     primaryUse?: string;
     stage?: "DESCUBRIMIENTO" | "INTERES_CONCRETO";
-  }): LeadRecord {
-    const existing = this.db.prepare("SELECT * FROM leads WHERE session_id = ?").get(lead.sessionId) as LeadRecord | undefined;
-    const now = new Date().toISOString();
+  }): Promise<Lead> {
+    const existing = await this.getLeadBySessionId(lead.sessionId);
+    const now = new Date();
 
     if (existing) {
       const updatedName = lead.name || existing.name;
-      const updatedChannel = lead.contactChannel || existing.contact_channel;
-      const updatedVehicle = lead.vehicleTypeInterest || existing.vehicle_type_interest;
-      const updatedUse = lead.primaryUse || existing.primary_use;
+      const updatedChannel = lead.contactChannel || existing.contactChannel;
+      const updatedVehicle = lead.vehicleTypeInterest || existing.vehicleTypeInterest;
+      const updatedUse = lead.primaryUse || existing.primaryUse;
       const updatedStage = lead.stage || existing.stage;
 
-      this.db.prepare(
-        `UPDATE leads SET
-          name = ?,
-          contact_channel = ?,
-          vehicle_type_interest = ?,
-          primary_use = ?,
-          stage = ?,
-          updated_at = ?
-        WHERE session_id = ?`
-      ).run(updatedName, updatedChannel, updatedVehicle, updatedUse, updatedStage, now, lead.sessionId);
+      const [updated] = await this.db
+        .update(leads)
+        .set({
+          name: updatedName,
+          contactChannel: updatedChannel,
+          vehicleTypeInterest: updatedVehicle,
+          primaryUse: updatedUse,
+          stage: updatedStage,
+          updatedAt: now,
+        })
+        .where(eq(leads.sessionId, lead.sessionId))
+        .returning();
 
-      return {
-        ...existing,
-        name: updatedName,
-        contact_channel: updatedChannel,
-        vehicle_type_interest: updatedVehicle,
-        primary_use: updatedUse,
-        stage: updatedStage,
-        updated_at: now,
-      };
+      return updated;
     } else {
       const id = "lead_" + randomUUID().replace(/-/g, "").slice(0, 16);
       const stage = lead.stage || "DESCUBRIMIENTO";
-      this.db.prepare(
-        `INSERT INTO leads (id, session_id, name, contact_channel, vehicle_type_interest, primary_use, stage, status, created_at, updated_at)
-         VALUES (?, ?, ?, ?, ?, ?, ?, 'ACTIVE', ?, ?)`
-      ).run(
-        id,
-        lead.sessionId,
-        lead.name || null,
-        lead.contactChannel || lead.sessionId,
-        lead.vehicleTypeInterest || null,
-        lead.primaryUse || null,
-        stage,
-        now,
-        now
-      );
 
-      return {
-        id,
-        session_id: lead.sessionId,
-        name: lead.name || null,
-        contact_channel: lead.contactChannel || lead.sessionId,
-        vehicle_type_interest: lead.vehicleTypeInterest || null,
-        primary_use: lead.primaryUse || null,
-        stage,
-        status: "ACTIVE",
-        created_at: now,
-        updated_at: now,
-      };
+      const [created] = await this.db
+        .insert(leads)
+        .values({
+          id,
+          sessionId: lead.sessionId,
+          name: lead.name || null,
+          contactChannel: lead.contactChannel || lead.sessionId,
+          vehicleTypeInterest: lead.vehicleTypeInterest || null,
+          primaryUse: lead.primaryUse || null,
+          stage,
+          status: "ACTIVE",
+          createdAt: now,
+          updatedAt: now,
+        })
+        .returning();
+
+      return created;
     }
   }
 
-  getLeadBySessionId(sessionId: string): LeadRecord | null {
-    const lead = this.db.prepare("SELECT * FROM leads WHERE session_id = ?").get(sessionId) as LeadRecord | undefined;
-    return lead || null;
+  async getLeadBySessionId(sessionId: string): Promise<Lead | null> {
+    const records = await this.db
+      .select()
+      .from(leads)
+      .where(eq(leads.sessionId, sessionId))
+      .limit(1);
+
+    return records[0] || null;
   }
 
-  listLeads(limit = 100): LeadRecord[] {
-    return this.db.prepare("SELECT * FROM leads ORDER BY updated_at DESC LIMIT ?").all(limit) as LeadRecord[];
+  async listLeads(limit = 100): Promise<Lead[]> {
+    return await this.db
+      .select()
+      .from(leads)
+      .orderBy(desc(leads.updatedAt))
+      .limit(limit);
   }
 
   // HITL TICKETS
-  createHitlTicket(ticket: {
+  async createHitlTicket(ticket: {
     sessionId: string;
     reason: string;
     requirementSummary: string;
     ticketCode?: string;
-  }): HitlTicketRecord {
+  }): Promise<HitlTicket> {
     const id = "tick_" + randomUUID().replace(/-/g, "").slice(0, 16);
     const code = ticket.ticketCode || `TICK-${Math.floor(10000 + Math.random() * 90000)}`;
-    const now = new Date().toISOString();
+    const now = new Date();
 
-    this.db.prepare(
-      `INSERT INTO hitl_tickets (id, ticket_code, session_id, reason, requirement_summary, status, created_at, updated_at)
-       VALUES (?, ?, ?, ?, ?, 'PENDING', ?, ?)`
-    ).run(id, code, ticket.sessionId, ticket.reason, ticket.requirementSummary, now, now);
+    const [created] = await this.db
+      .insert(hitlTickets)
+      .values({
+        id,
+        ticketCode: code,
+        sessionId: ticket.sessionId,
+        reason: ticket.reason,
+        requirementSummary: ticket.requirementSummary,
+        status: "PENDING",
+        createdAt: now,
+        updatedAt: now,
+      })
+      .returning();
 
-    return {
-      id,
-      ticket_code: code,
-      session_id: ticket.sessionId,
-      reason: ticket.reason,
-      requirement_summary: ticket.requirementSummary,
-      status: "PENDING",
-      operator_notes: null,
-      created_at: now,
-      updated_at: now,
-    };
+    return created;
   }
 
-  getHitlTicketByCode(ticketCode: string): HitlTicketRecord | null {
-    const ticket = this.db.prepare("SELECT * FROM hitl_tickets WHERE ticket_code = ?").get(ticketCode) as HitlTicketRecord | undefined;
-    return ticket || null;
+  async getHitlTicketByCode(ticketCode: string): Promise<HitlTicket | null> {
+    const records = await this.db
+      .select()
+      .from(hitlTickets)
+      .where(eq(hitlTickets.ticketCode, ticketCode))
+      .limit(1);
+
+    return records[0] || null;
   }
 
-  listHitlTickets(sessionId?: string, limit = 50): HitlTicketRecord[] {
+  async listHitlTickets(sessionId?: string, limit = 50): Promise<HitlTicket[]> {
     if (sessionId) {
-      return this.db.prepare("SELECT * FROM hitl_tickets WHERE session_id = ? ORDER BY created_at DESC LIMIT ?").all(sessionId, limit) as HitlTicketRecord[];
+      return await this.db
+        .select()
+        .from(hitlTickets)
+        .where(eq(hitlTickets.sessionId, sessionId))
+        .orderBy(desc(hitlTickets.createdAt))
+        .limit(limit);
     }
-    return this.db.prepare("SELECT * FROM hitl_tickets ORDER BY created_at DESC LIMIT ?").all(limit) as HitlTicketRecord[];
+    return await this.db
+      .select()
+      .from(hitlTickets)
+      .orderBy(desc(hitlTickets.createdAt))
+      .limit(limit);
   }
 
-  updateHitlTicket(ticketCode: string, status: "PENDING" | "IN_PROGRESS" | "RESOLVED" | "CANCELLED", notes?: string): HitlTicketRecord | null {
-    const now = new Date().toISOString();
-    this.db.prepare(
-      "UPDATE hitl_tickets SET status = ?, operator_notes = COALESCE(?, operator_notes), updated_at = ? WHERE ticket_code = ?"
-    ).run(status, notes || null, now, ticketCode);
-    return this.getHitlTicketByCode(ticketCode);
+  async updateHitlTicket(
+    ticketCode: string,
+    status: "PENDING" | "IN_PROGRESS" | "RESOLVED" | "CANCELLED",
+    notes?: string
+  ): Promise<HitlTicket | null> {
+    const now = new Date();
+    const updateData: { status: "PENDING" | "IN_PROGRESS" | "RESOLVED" | "CANCELLED"; updatedAt: Date; operatorNotes?: string } = {
+      status,
+      updatedAt: now,
+    };
+    if (notes) {
+      updateData.operatorNotes = notes;
+    }
+
+    const [updated] = await this.db
+      .update(hitlTickets)
+      .set(updateData)
+      .where(eq(hitlTickets.ticketCode, ticketCode))
+      .returning();
+
+    return updated || null;
   }
 
   // FEEDBACK
-  saveFeedback(feedback: {
+  async saveFeedback(feedback: {
     sessionId: string;
     messageId?: string;
     isPositive: boolean;
     rating?: number;
     comment?: string;
-  }): UserFeedbackRecord {
+  }): Promise<UserFeedback> {
     const id = "fb_" + randomUUID().replace(/-/g, "").slice(0, 16);
-    const now = new Date().toISOString();
+    const now = new Date();
 
-    this.db.prepare(
-      `INSERT INTO user_feedbacks (id, session_id, message_id, is_positive, rating, comment, created_at)
-       VALUES (?, ?, ?, ?, ?, ?, ?)`
-    ).run(
-      id,
-      feedback.sessionId,
-      feedback.messageId || null,
-      feedback.isPositive ? 1 : 0,
-      feedback.rating || null,
-      feedback.comment || null,
-      now
-    );
+    const [created] = await this.db
+      .insert(userFeedbacks)
+      .values({
+        id,
+        sessionId: feedback.sessionId,
+        messageId: feedback.messageId || null,
+        isPositive: feedback.isPositive,
+        rating: feedback.rating || null,
+        comment: feedback.comment || null,
+        createdAt: now,
+      })
+      .returning();
 
-    return {
-      id,
-      session_id: feedback.sessionId,
-      message_id: feedback.messageId || null,
-      is_positive: feedback.isPositive ? 1 : 0,
-      rating: feedback.rating || null,
-      comment: feedback.comment || null,
-      created_at: now,
-    };
+    return created;
   }
 
-  listFeedback(limit = 100): UserFeedbackRecord[] {
-    return this.db.prepare("SELECT * FROM user_feedbacks ORDER BY created_at DESC LIMIT ?").all(limit) as UserFeedbackRecord[];
+  async listFeedback(limit = 100): Promise<UserFeedback[]> {
+    return await this.db
+      .select()
+      .from(userFeedbacks)
+      .orderBy(desc(userFeedbacks.createdAt))
+      .limit(limit);
   }
 
   // TRACES / TELEMETRY
-  saveTrace(trace: {
+  async saveTrace(trace: {
     traceId: string;
     sessionId: string;
     modelName: string;
@@ -358,47 +335,44 @@ export class Repository {
     totalTokens: number;
     toolsCalled?: unknown;
     guardrailsResult?: unknown;
-  }): ExecutionTraceRecord {
+  }): Promise<ExecutionTrace> {
     const id = "tr_" + randomUUID().replace(/-/g, "").slice(0, 16);
-    const now = new Date().toISOString();
+    const now = new Date();
 
-    this.db.prepare(
-      `INSERT INTO execution_traces (id, trace_id, session_id, model_name, latency_ms, input_tokens, output_tokens, total_tokens, tools_called, guardrails_result, created_at)
-       VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`
-    ).run(
-      id,
-      trace.traceId,
-      trace.sessionId,
-      trace.modelName,
-      trace.latencyMs,
-      trace.inputTokens,
-      trace.outputTokens,
-      trace.totalTokens,
-      trace.toolsCalled ? JSON.stringify(trace.toolsCalled) : null,
-      trace.guardrailsResult ? JSON.stringify(trace.guardrailsResult) : null,
-      now
-    );
+    const [created] = await this.db
+      .insert(executionTraces)
+      .values({
+        id,
+        traceId: trace.traceId,
+        sessionId: trace.sessionId,
+        modelName: trace.modelName,
+        latencyMs: trace.latencyMs,
+        inputTokens: trace.inputTokens,
+        outputTokens: trace.outputTokens,
+        totalTokens: trace.totalTokens,
+        toolsCalled: trace.toolsCalled ?? null,
+        guardrailsResult: trace.guardrailsResult ?? null,
+        createdAt: now,
+      })
+      .returning();
 
-    return {
-      id,
-      trace_id: trace.traceId,
-      session_id: trace.sessionId,
-      model_name: trace.modelName,
-      latency_ms: trace.latencyMs,
-      input_tokens: trace.inputTokens,
-      output_tokens: trace.outputTokens,
-      total_tokens: trace.totalTokens,
-      tools_called: trace.toolsCalled ? JSON.stringify(trace.toolsCalled) : null,
-      guardrails_result: trace.guardrailsResult ? JSON.stringify(trace.guardrailsResult) : null,
-      created_at: now,
-    };
+    return created;
   }
 
-  listTraces(sessionId?: string, limit = 50): ExecutionTraceRecord[] {
+  async listTraces(sessionId?: string, limit = 50): Promise<ExecutionTrace[]> {
     if (sessionId) {
-      return this.db.prepare("SELECT * FROM execution_traces WHERE session_id = ? ORDER BY created_at DESC LIMIT ?").all(sessionId, limit) as ExecutionTraceRecord[];
+      return await this.db
+        .select()
+        .from(executionTraces)
+        .where(eq(executionTraces.sessionId, sessionId))
+        .orderBy(desc(executionTraces.createdAt))
+        .limit(limit);
     }
-    return this.db.prepare("SELECT * FROM execution_traces ORDER BY created_at DESC LIMIT ?").all(limit) as ExecutionTraceRecord[];
+    return await this.db
+      .select()
+      .from(executionTraces)
+      .orderBy(desc(executionTraces.createdAt))
+      .limit(limit);
   }
 }
 

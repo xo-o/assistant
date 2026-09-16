@@ -66,8 +66,8 @@ chatRouter.post("/chat/stream", async (req: Request, res: Response) => {
 });
 
 // Session History
-chatRouter.get("/chat/history/:sessionId", (req: Request, res: Response) => {
+chatRouter.get("/chat/history/:sessionId", async (req: Request, res: Response) => {
   const sessionId = req.params.sessionId;
-  const messages = repository.getSessionMessages(sessionId);
+  const messages = await repository.getSessionMessages(sessionId);
   res.json({ sessionId, count: messages.length, messages });
 });

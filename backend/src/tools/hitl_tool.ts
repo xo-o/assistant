@@ -22,7 +22,7 @@ export function createSolicitarContactoHumanoTool(contextSessionId?: string): Fu
       const motivo = parsed.motivo || "ESCALADO_HUMANO";
       const resumen = parsed.resumen_requerimiento || "Sin requerimiento especificado";
 
-      const ticket = repository.createHitlTicket({
+      const ticket = await repository.createHitlTicket({
         sessionId,
         reason: motivo,
         requirementSummary: resumen,
@@ -30,7 +30,7 @@ export function createSolicitarContactoHumanoTool(contextSessionId?: string): Fu
 
       return {
         status: "ticket_created",
-        ticket_id: ticket.ticket_code,
+        ticket_id: ticket.ticketCode,
         session_id: sessionId,
         motivo,
         resumen,
