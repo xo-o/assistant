@@ -117,8 +117,8 @@ export class RAGEngine {
       return [];
     }
 
-    // Try Google Gen AI embeddings if configured
-    if (this.aiClient && env.GEMINI_API_KEY) {
+    // Try Google Gen AI embeddings if configured with valid key
+    if (this.aiClient && env.GEMINI_API_KEY && env.GEMINI_API_KEY.startsWith("AIza") && process.env.NODE_ENV !== "test") {
       try {
         const response = await this.aiClient.models.embedContent({
           model: "text-embedding-004",
@@ -132,7 +132,9 @@ export class RAGEngine {
           return this.rankByEmbedding(embeddingValues, topK);
         }
       } catch (error) {
-        console.warn("Vertex / Gemini embedding call failed, falling back to local semantic retrieval:", error);
+        if (process.env.NODE_ENV !== "test") {
+          console.warn("Embedding API call failed, falling back to local semantic retrieval:", error);
+        }
       }
     }
 
