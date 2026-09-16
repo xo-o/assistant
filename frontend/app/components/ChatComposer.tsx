@@ -70,7 +70,7 @@ export function ChatComposer({
 
   return (
     <div className="w-full max-w-3xl mx-auto px-4 pb-5 pt-2">
-      <div className="relative rounded-2xl bg-[#141414] border border-white/10 shadow-2xl transition-all focus-within:border-white/20">
+      <div className="relative rounded-2xl bg-card border border-border shadow-md transition-all focus-within:ring-1 focus-within:ring-ring">
         {/* Input Textarea */}
         <textarea
           ref={textareaRef}
@@ -79,7 +79,7 @@ export function ChatComposer({
           onKeyDown={handleKeyDown}
           placeholder="Escribe tu consulta sobre autos a Luis..."
           rows={1}
-          className="w-full bg-transparent px-4 pt-3.5 pb-2 text-sm text-neutral-100 placeholder:text-neutral-500 focus:outline-none resize-none max-h-40 leading-relaxed font-normal"
+          className="w-full bg-transparent px-4 pt-3.5 pb-2 text-sm text-foreground placeholder:text-muted-foreground focus:outline-none resize-none max-h-40 leading-relaxed font-normal"
         />
 
         {/* Bottom Toolbar inside composer */}
@@ -93,33 +93,33 @@ export function ChatComposer({
                   <Button
                     variant="ghost"
                     size="xs"
-                    className="h-7 px-2.5 rounded-lg bg-neutral-800/80 hover:bg-neutral-800 text-neutral-300 hover:text-white border border-white/10 gap-1.5 text-xs font-medium"
+                    className="h-7 px-2.5 rounded-lg bg-muted/80 hover:bg-muted text-foreground border border-border gap-1.5 text-xs font-medium"
                   />
                 }
               >
-                <Sparkles className="size-3 text-amber-400" />
+                <Sparkles className="size-3 text-amber-500" />
                 <span>{MODEL_NAMES[currentModel] || currentModel}</span>
-                <ChevronDown className="size-3 text-neutral-400" />
+                <ChevronDown className="size-3 text-muted-foreground" />
               </DropdownMenuTrigger>
               <DropdownMenuContent
                 align="start"
-                className="w-48 bg-[#18181b] border-white/10 text-neutral-200"
+                className="w-48 bg-popover text-popover-foreground border-border"
               >
                 <DropdownMenuItem
                   onClick={() => onModelChange("gemini-1.5-pro")}
-                  className="text-xs cursor-pointer hover:bg-neutral-800 focus:bg-neutral-800"
+                  className="text-xs cursor-pointer"
                 >
                   Gemini 1.5 Pro (Baseline)
                 </DropdownMenuItem>
                 <DropdownMenuItem
                   onClick={() => onModelChange("gemini-2.0-flash")}
-                  className="text-xs cursor-pointer hover:bg-neutral-800 focus:bg-neutral-800"
+                  className="text-xs cursor-pointer"
                 >
                   Gemini 2.0 Flash (Fast)
                 </DropdownMenuItem>
                 <DropdownMenuItem
                   onClick={() => onModelChange("mock-agent")}
-                  className="text-xs cursor-pointer hover:bg-neutral-800 focus:bg-neutral-800"
+                  className="text-xs cursor-pointer"
                 >
                   Mock Local (Test Mode)
                 </DropdownMenuItem>
@@ -134,7 +134,7 @@ export function ChatComposer({
                     type="button"
                     variant="ghost"
                     size="xs"
-                    className="h-7 px-2 rounded-lg bg-neutral-800/40 hover:bg-neutral-800 text-neutral-400 hover:text-neutral-200 border border-white/5 gap-1.5 text-xs"
+                    className="h-7 px-2 rounded-lg bg-muted/40 hover:bg-muted text-muted-foreground hover:text-foreground border border-border/50 gap-1.5 text-xs"
                   />
                 }
               >
@@ -150,9 +150,9 @@ export function ChatComposer({
               variant="ghost"
               size="xs"
               onClick={onOpenLead}
-              className="h-7 px-2 rounded-lg bg-neutral-800/40 hover:bg-neutral-800 text-neutral-400 hover:text-neutral-200 border border-white/5 gap-1.5 text-xs"
+              className="h-7 px-2 rounded-lg bg-muted/40 hover:bg-muted text-muted-foreground hover:text-foreground border border-border/50 gap-1.5 text-xs"
             >
-              <User className="size-3 text-blue-400" />
+              <User className="size-3 text-primary" />
               <span>{leadName ? `Lead: ${leadName}` : "Lead"}</span>
             </Button>
           </div>
@@ -166,7 +166,7 @@ export function ChatComposer({
                     type="button"
                     variant="ghost"
                     size="icon-sm"
-                    className="size-7 text-neutral-400 hover:text-neutral-200"
+                    className="size-7 text-muted-foreground hover:text-foreground hover:bg-muted"
                   />
                 }
               >
@@ -182,7 +182,7 @@ export function ChatComposer({
                     type="button"
                     onClick={() => handleSubmit()}
                     disabled={!input.trim() || isStreaming}
-                    className="size-7 rounded-full bg-white text-black hover:bg-neutral-200 disabled:opacity-30 disabled:hover:bg-white flex items-center justify-center transition-all cursor-pointer disabled:cursor-not-allowed shadow-sm"
+                    className="size-7 rounded-full bg-primary text-primary-foreground hover:bg-primary/90 disabled:opacity-30 disabled:hover:bg-primary flex items-center justify-center transition-all cursor-pointer disabled:cursor-not-allowed shadow-xs"
                   />
                 }
               >

@@ -18,7 +18,6 @@ interface FormattedContentProps {
 
 // Inline renderer for rich text: bold, code, em
 function renderInlineFormatting(text: string): React.ReactNode[] {
-  // Regex to match **bold**, `code`, *italic*
   const parts: React.ReactNode[] = [];
   const regex = /(\*\*[^*]+\*\*|`[^`]+`|\*[^*]+\*)/g;
   let lastIndex = 0;
@@ -31,7 +30,7 @@ function renderInlineFormatting(text: string): React.ReactNode[] {
     const token = match[0];
     if (token.startsWith("**") && token.endsWith("**")) {
       parts.push(
-        <strong key={match.index} className="font-semibold text-white">
+        <strong key={match.index} className="font-semibold text-foreground">
           {token.slice(2, -2)}
         </strong>
       );
@@ -39,14 +38,14 @@ function renderInlineFormatting(text: string): React.ReactNode[] {
       parts.push(
         <code
           key={match.index}
-          className="px-1.5 py-0.5 rounded bg-neutral-800 border border-white/10 font-mono text-[11px] text-neutral-200"
+          className="px-1.5 py-0.5 rounded bg-muted border border-border font-mono text-[11px] text-foreground"
         >
           {token.slice(1, -1)}
         </code>
       );
     } else if (token.startsWith("*") && token.endsWith("*")) {
       parts.push(
-        <em key={match.index} className="italic text-neutral-300">
+        <em key={match.index} className="italic text-muted-foreground">
           {token.slice(1, -1)}
         </em>
       );
@@ -139,7 +138,7 @@ export function FormattedContent({ content }: FormattedContentProps) {
   };
 
   return (
-    <div className="space-y-3.5 text-neutral-200 text-sm leading-relaxed">
+    <div className="space-y-3.5 text-foreground text-sm leading-relaxed">
       {blocks.map((block, idx) => {
         if (block.type === "text") {
           return (
@@ -157,7 +156,7 @@ export function FormattedContent({ content }: FormattedContentProps) {
                   return (
                     <h3
                       key={lIdx}
-                      className="font-semibold text-neutral-100 text-sm mt-3 mb-1 tracking-tight"
+                      className="font-semibold text-foreground text-sm mt-3 mb-1 tracking-tight"
                     >
                       {renderInlineFormatting(trimmed.slice(4))}
                     </h3>
@@ -169,7 +168,7 @@ export function FormattedContent({ content }: FormattedContentProps) {
                   return (
                     <h2
                       key={lIdx}
-                      className="font-bold text-neutral-100 text-base mt-3.5 mb-1.5 tracking-tight"
+                      className="font-bold text-foreground text-base mt-3.5 mb-1.5 tracking-tight"
                     >
                       {renderInlineFormatting(trimmed.slice(3))}
                     </h2>
@@ -181,7 +180,7 @@ export function FormattedContent({ content }: FormattedContentProps) {
                   return (
                     <blockquote
                       key={lIdx}
-                      className="border-l-2 border-white/20 bg-neutral-900/50 pl-3 py-1.5 my-2 rounded-r-lg text-xs text-neutral-300 italic"
+                      className="border-l-2 border-primary/50 bg-muted/40 pl-3 py-1.5 my-2 rounded-r-lg text-xs text-muted-foreground italic"
                     >
                       {renderInlineFormatting(trimmed.slice(2))}
                     </blockquote>
@@ -193,9 +192,9 @@ export function FormattedContent({ content }: FormattedContentProps) {
                   return (
                     <div
                       key={lIdx}
-                      className="flex items-start gap-2 text-xs leading-relaxed text-neutral-300 ml-1.5"
+                      className="flex items-start gap-2 text-xs leading-relaxed text-foreground/90 ml-1.5"
                     >
-                      <span className="size-1.5 rounded-full bg-neutral-400 mt-1.5 shrink-0" />
+                      <span className="size-1.5 rounded-full bg-muted-foreground mt-1.5 shrink-0" />
                       <span>{renderInlineFormatting(trimmed.slice(2))}</span>
                     </div>
                   );
@@ -207,9 +206,9 @@ export function FormattedContent({ content }: FormattedContentProps) {
                   return (
                     <div
                       key={lIdx}
-                      className="flex items-start gap-2 text-xs leading-relaxed text-neutral-300 ml-1.5"
+                      className="flex items-start gap-2 text-xs leading-relaxed text-foreground/90 ml-1.5"
                     >
-                      <span className="font-semibold text-neutral-400 text-[11px] shrink-0">
+                      <span className="font-semibold text-muted-foreground text-[11px] shrink-0">
                         {numMatch[1]}.
                       </span>
                       <span>{renderInlineFormatting(numMatch[2])}</span>
@@ -232,22 +231,22 @@ export function FormattedContent({ content }: FormattedContentProps) {
         return (
           <div
             key={idx}
-            className="my-3 rounded-xl border border-white/10 bg-[#121214] overflow-hidden shadow-sm"
+            className="my-3 rounded-xl border border-border bg-card overflow-hidden shadow-xs"
           >
             {/* Table Header with Copy Button */}
-            <div className="flex items-center justify-between px-3.5 py-2 bg-neutral-900/70 border-b border-white/10 text-xs">
-              <span className="font-medium text-neutral-400 text-xs">
+            <div className="flex items-center justify-between px-3.5 py-2 bg-muted/50 border-b border-border text-xs">
+              <span className="font-medium text-muted-foreground text-xs">
                 Comparativa / Especificaciones
               </span>
               <Button
                 variant="ghost"
                 size="xs"
                 onClick={() => handleCopyTable(block.raw, idx)}
-                className="h-6 px-2 text-neutral-400 hover:text-white gap-1 text-[11px]"
+                className="h-6 px-2 text-muted-foreground hover:text-foreground gap-1 text-[11px]"
               >
                 {copiedIndex === idx ? (
                   <>
-                    <Check className="size-3 text-emerald-400" />
+                    <Check className="size-3 text-emerald-500" />
                     <span>Copiado</span>
                   </>
                 ) : (
@@ -262,12 +261,12 @@ export function FormattedContent({ content }: FormattedContentProps) {
             {/* shadcn Table Component */}
             <div className="overflow-x-auto">
               <Table>
-                <TableHeader className="bg-neutral-900/40">
-                  <TableRow className="border-white/10 hover:bg-transparent">
+                <TableHeader className="bg-muted/30">
+                  <TableRow className="border-border hover:bg-transparent">
                     {block.headers.map((h, hIdx) => (
                       <TableHead
                         key={hIdx}
-                        className="text-xs font-semibold text-neutral-300 py-2.5 px-4"
+                        className="text-xs font-semibold text-foreground py-2.5 px-4"
                       >
                         {renderInlineFormatting(h)}
                       </TableHead>
@@ -278,12 +277,12 @@ export function FormattedContent({ content }: FormattedContentProps) {
                   {block.rows.map((row, rIdx) => (
                     <TableRow
                       key={rIdx}
-                      className="border-white/5 hover:bg-neutral-800/40 transition-colors"
+                      className="border-border/60 hover:bg-muted/40 transition-colors"
                     >
                       {row.map((cell, cIdx) => (
                         <TableCell
                           key={cIdx}
-                          className="text-xs text-neutral-200 py-2.5 px-4 font-normal"
+                          className="text-xs text-foreground py-2.5 px-4 font-normal"
                         >
                           {renderInlineFormatting(cell)}
                         </TableCell>

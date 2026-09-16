@@ -285,7 +285,7 @@ export default function Home() {
   };
 
   return (
-    <div className="flex h-dvh overflow-hidden bg-black text-neutral-100 antialiased">
+    <div className="flex h-dvh overflow-hidden bg-background text-foreground antialiased">
       {/* Sidebar with Recent Chats */}
       <AppSidebar
         isOpen={isSidebarOpen}

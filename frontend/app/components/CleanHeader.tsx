@@ -25,7 +25,7 @@ export function CleanHeader({
   onOpenTelemetry,
 }: CleanHeaderProps) {
   return (
-    <header className="h-12 border-b border-white/10 bg-black/80 backdrop-blur px-4 flex items-center justify-between gap-3 shrink-0 z-20">
+    <header className="h-12 border-b border-border bg-background/95 backdrop-blur px-4 flex items-center justify-between gap-3 shrink-0 z-20">
       {/* Left Title & Sidebar trigger */}
       <div className="flex items-center gap-2.5">
         {!isSidebarOpen && (
@@ -36,7 +36,7 @@ export function CleanHeader({
                   variant="ghost"
                   size="icon-sm"
                   onClick={onToggleSidebar}
-                  className="size-7 text-neutral-400 hover:text-white hover:bg-neutral-800"
+                  className="size-7 text-muted-foreground hover:text-foreground hover:bg-muted"
                 />
               }
             >
@@ -47,10 +47,10 @@ export function CleanHeader({
         )}
 
         <div className="flex items-center gap-2">
-          <span className="text-xs font-semibold text-neutral-300">
+          <span className="text-xs font-semibold text-foreground">
             Luis
           </span>
-          <span className="text-[11px] text-neutral-500 font-normal">
+          <span className="text-[11px] text-muted-foreground font-normal">
             • Asesor Automotriz Virtual
           </span>
         </div>
@@ -64,9 +64,9 @@ export function CleanHeader({
             variant="ghost"
             size="xs"
             onClick={onOpenLead}
-            className="text-neutral-400 hover:text-white hover:bg-neutral-800/80 gap-1.5 text-xs font-normal"
+            className="text-muted-foreground hover:text-foreground hover:bg-muted gap-1.5 text-xs font-normal"
           >
-            <UserCheck className="size-3.5 text-blue-400" />
+            <UserCheck className="size-3.5 text-primary" />
             <span className="text-xs">{leadName}</span>
           </Button>
         )}
@@ -92,11 +92,11 @@ export function CleanHeader({
                 variant="ghost"
                 size="icon-sm"
                 onClick={onOpenTelemetry}
-                className="size-7 text-neutral-400 hover:text-white hover:bg-neutral-800"
+                className="size-7 text-muted-foreground hover:text-foreground hover:bg-muted"
               />
             }
           >
-            <Activity className="size-3.5 text-emerald-400" />
+            <Activity className="size-3.5 text-emerald-500" />
           </TooltipTrigger>
           <TooltipContent>Trazas OpenTelemetry</TooltipContent>
         </Tooltip>
