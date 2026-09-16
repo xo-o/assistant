@@ -52,7 +52,11 @@ export class AgentOrchestrator {
     const modelName = request.model || env.DEFAULT_MODEL;
 
     // 1. Ensure Session
-    await repository.ensureSession(sessionId, request.userId);
+    const session = await repository.ensureSession(sessionId, request.userId);
+    if (!session.title || session.title === "Nueva Consulta") {
+      const generatedTitle = request.message.slice(0, 42).trim();
+      await repository.touchSession(sessionId, generatedTitle);
+    }
 
     // 2. Persist User Message
     await repository.addMessage({

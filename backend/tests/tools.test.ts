@@ -15,10 +15,6 @@ describe("Agent Tools Suite", () => {
     await repository.ensureSession(testSessionId);
   });
 
-  after(async () => {
-    await closeDatabase();
-  });
-
   describe("guardar_lead Tool", () => {
     it("should persist lead data into English database schema and return standard output", async () => {
       const tool = createGuardarLeadTool(testSessionId);

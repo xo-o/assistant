@@ -65,6 +65,13 @@ chatRouter.post("/chat/stream", async (req: Request, res: Response) => {
   }
 });
 
+// List Recent Sessions
+chatRouter.get("/chat/sessions", async (req: Request, res: Response) => {
+  const limit = req.query.limit ? Number(req.query.limit) : 30;
+  const sessions = await repository.listSessions(limit);
+  res.json({ count: sessions.length, sessions });
+});
+
 // Session History
 chatRouter.get("/chat/history/:sessionId", async (req: Request, res: Response) => {
   const sessionId = req.params.sessionId;

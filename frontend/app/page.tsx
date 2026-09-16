@@ -1,14 +1,16 @@
 "use client";
 
 import React, { useState, useEffect } from "react";
-import { Header } from "./components/Header";
-import { ChatArea, MessageItem } from "./components/ChatArea";
+import { AppSidebar, ChatSessionItem } from "./components/AppSidebar";
+import { CleanHeader } from "./components/CleanHeader";
+import { CleanChatArea, MessageItem } from "./components/CleanChatArea";
 import { LeadPanel, LeadData } from "./components/LeadPanel";
 import { HitlModal, HitlTicketData } from "./components/HitlModal";
 import { TelemetryModal, TelemetryTrace } from "./components/TelemetryModal";
 
 export default function Home() {
   const [sessionId, setSessionId] = useState<string>("");
+  const [sessions, setSessions] = useState<ChatSessionItem[]>([]);
   const [messages, setMessages] = useState<MessageItem[]>([]);
   const [currentModel, setCurrentModel] = useState<string>("gemini-1.5-pro");
   const [lead, setLead] = useState<LeadData | null>(null);
@@ -16,7 +18,8 @@ export default function Home() {
   const [hitlCount, setHitlCount] = useState<number>(0);
   const [latestTrace, setLatestTrace] = useState<TelemetryTrace | null>(null);
 
-  // Modals & Panels
+  // Layout & Modals
+  const [isSidebarOpen, setIsSidebarOpen] = useState(true);
   const [isLeadOpen, setIsLeadOpen] = useState(false);
   const [isHitlOpen, setIsHitlOpen] = useState(false);
   const [isTelemetryOpen, setIsTelemetryOpen] = useState(false);
@@ -25,19 +28,86 @@ export default function Home() {
   const [isStreaming, setIsStreaming] = useState(false);
   const [streamingDelta, setStreamingDelta] = useState("");
 
-  // Initialize Session ID
+  // Load Sessions List
+  const fetchSessions = async () => {
+    try {
+      const res = await fetch("/api/chat/sessions");
+      if (res.ok) {
+        const data = await res.json();
+        if (data.sessions) {
+          setSessions(data.sessions);
+        }
+      }
+    } catch (err) {
+      console.error("Failed to load sessions:", err);
+    }
+  };
+
+  // Initialize Session
   useEffect(() => {
     const existing = localStorage.getItem("automotive_advisor_session");
     if (existing) {
       setSessionId(existing);
+      loadSessionHistory(existing);
     } else {
-      const newId = "sess_" + Math.random().toString(36).substring(2, 11);
-      localStorage.setItem("automotive_advisor_session", newId);
-      setSessionId(newId);
+      handleNewChat();
     }
+    fetchSessions();
   }, []);
 
-  // Send Message with SSE Stream
+  // Load Session History when selecting a chat from Recent
+  const loadSessionHistory = async (id: string) => {
+    try {
+      const res = await fetch(`/api/chat/history/${id}`);
+      if (res.ok) {
+        const data = await res.json();
+        if (data.messages && data.messages.length > 0) {
+          const mapped: MessageItem[] = data.messages.map((m: any) => ({
+            id: m.id,
+            role: m.role,
+            content: m.content,
+            createdAt: m.createdAt || m.created_at,
+            toolsCalled: m.toolCalls ? JSON.parse(typeof m.toolCalls === "string" ? m.toolCalls : JSON.stringify(m.toolCalls)).map((t: any) => t.name) : [],
+          }));
+          setMessages(mapped);
+        } else {
+          setMessages([]);
+        }
+      }
+
+      // Fetch Lead for this session
+      const leadRes = await fetch(`http://127.0.0.1:8000/api/v1/leads/${id}`);
+      if (leadRes.ok) {
+        const leadData = await leadRes.json();
+        setLead(leadData);
+      } else {
+        setLead(null);
+      }
+    } catch (err) {
+      console.error("Failed to load session history:", err);
+    }
+  };
+
+  // Switch Active Session
+  const handleSelectSession = (selectedId: string) => {
+    if (selectedId === sessionId) return;
+    setSessionId(selectedId);
+    localStorage.setItem("automotive_advisor_session", selectedId);
+    loadSessionHistory(selectedId);
+  };
+
+  // Start New Chat
+  const handleNewChat = () => {
+    const newId = "sess_" + Math.random().toString(36).substring(2, 11);
+    setSessionId(newId);
+    localStorage.setItem("automotive_advisor_session", newId);
+    setMessages([]);
+    setLead(null);
+    setActiveHitlTicket(null);
+    setHitlCount(0);
+  };
+
+  // Send Message with SSE Streaming
   const handleSendMessage = async (text: string) => {
     if (!text.trim() || isStreaming) return;
 
@@ -126,9 +196,9 @@ export default function Home() {
       };
 
       setMessages((prev) => [...prev, assistantMsg]);
+      fetchSessions();
     } catch (err) {
-      console.error("Stream error, attempting JSON fallback:", err);
-      // Fallback to synchronous endpoint if SSE stream fails
+      console.error("Stream error, falling back to JSON:", err);
       try {
         const fallbackRes = await fetch("/api/chat", {
           method: "POST",
@@ -159,6 +229,7 @@ export default function Home() {
           if (fallbackData.telemetry) setLatestTrace(fallbackData.telemetry);
 
           setMessages((prev) => [...prev, assistantMsg]);
+          fetchSessions();
         }
       } catch (fallbackErr) {
         console.error("Critical error connecting to backend:", fallbackErr);
@@ -214,29 +285,48 @@ export default function Home() {
   };
 
   return (
-    <div className="flex flex-col h-dvh overflow-hidden bg-background">
-      {/* Top Header */}
-      <Header
-        currentModel={currentModel}
-        onModelChange={setCurrentModel}
-        leadName={lead?.name}
-        hitlCount={hitlCount}
-        onOpenLead={() => setIsLeadOpen(true)}
-        onOpenTelemetry={() => setIsTelemetryOpen(true)}
+    <div className="flex h-dvh overflow-hidden bg-black text-neutral-100 antialiased">
+      {/* Sidebar with Recent Chats */}
+      <AppSidebar
+        isOpen={isSidebarOpen}
+        onToggle={() => setIsSidebarOpen(!isSidebarOpen)}
+        sessions={sessions}
+        activeSessionId={sessionId}
+        onSelectSession={handleSelectSession}
+        onNewChat={handleNewChat}
+        userName={lead?.name}
       />
 
-      {/* Main Chat Area */}
-      <ChatArea
-        messages={messages}
-        onSendMessage={handleSendMessage}
-        onSendFeedback={handleSendFeedback}
-        onOpenHitlTicket={(ticket) => {
-          setActiveHitlTicket(ticket);
-          setIsHitlOpen(true);
-        }}
-        isStreaming={isStreaming}
-        streamingDelta={streamingDelta}
-      />
+      {/* Main Conversation Area */}
+      <div className="flex-1 flex flex-col h-full overflow-hidden">
+        {/* Minimal Header */}
+        <CleanHeader
+          isSidebarOpen={isSidebarOpen}
+          onToggleSidebar={() => setIsSidebarOpen(!isSidebarOpen)}
+          leadName={lead?.name}
+          hitlCount={hitlCount}
+          onOpenLead={() => setIsLeadOpen(true)}
+          onOpenHitl={() => setIsHitlOpen(true)}
+          onOpenTelemetry={() => setIsTelemetryOpen(true)}
+        />
+
+        {/* Clean Chat Canvas & Floating Input Composer */}
+        <CleanChatArea
+          messages={messages}
+          onSendMessage={handleSendMessage}
+          onSendFeedback={handleSendFeedback}
+          onOpenHitlTicket={(ticket) => {
+            setActiveHitlTicket(ticket);
+            setIsHitlOpen(true);
+          }}
+          isStreaming={isStreaming}
+          streamingDelta={streamingDelta}
+          currentModel={currentModel}
+          onModelChange={setCurrentModel}
+          onOpenLead={() => setIsLeadOpen(true)}
+          leadName={lead?.name}
+        />
+      </div>
 
       {/* Modals & Drawers */}
       <LeadPanel

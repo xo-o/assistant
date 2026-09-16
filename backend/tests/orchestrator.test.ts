@@ -11,10 +11,6 @@ describe("Agent Orchestrator Integration Suite", () => {
     await repository.ensureSession(sessionId);
   });
 
-  after(async () => {
-    await closeDatabase();
-  });
-
   it("TC-01: First Turn - Unidentified User Greeting should ask for name", async () => {
     const res = await orchestrator.executeTurn({
       sessionId,

@@ -3,6 +3,7 @@ import "./globals.css";
 import { Inter } from "next/font/google";
 import { cn } from "@/lib/utils";
 import { ThemeProvider } from "@/components/theme-provider";
+import { TooltipProvider } from "@/components/ui/tooltip";
 
 const inter = Inter({ subsets: ["latin"], variable: "--font-sans" });
 
@@ -20,16 +21,20 @@ export default function RootLayout({
     <html
       lang="es"
       suppressHydrationWarning
-      className={cn("h-full", "font-sans", inter.variable)}
+      className={cn("h-full dark font-sans", inter.variable)}
+      style={{ colorScheme: "dark" }}
     >
-      <body className="h-full bg-background text-foreground antialiased selection:bg-primary/20">
+      <body className="h-full bg-black text-neutral-100 antialiased selection:bg-neutral-800">
         <ThemeProvider
           attribute="class"
-          defaultTheme="system"
-          enableSystem
+          defaultTheme="dark"
+          forcedTheme="dark"
+          enableSystem={false}
           disableTransitionOnChange
         >
-          {children}
+          <TooltipProvider delay={200}>
+            {children}
+          </TooltipProvider>
         </ThemeProvider>
       </body>
     </html>

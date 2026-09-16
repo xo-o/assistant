@@ -12,10 +12,6 @@ describe("Memory & Session Isolation Suite", () => {
     await repository.ensureSession(sessionB);
   });
 
-  after(async () => {
-    await closeDatabase();
-  });
-
   it("should keep concurrent sessions strictly isolated without cross-contamination", async () => {
     // Record Laura's preference in Session A
     await repository.saveOrUpdateLead({
