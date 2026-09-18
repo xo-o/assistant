@@ -2,11 +2,11 @@
 
 import React, { useState, useEffect } from "react";
 import { AppSidebar, ChatSessionItem } from "./components/app-sidebar";
-import { CleanHeader } from "./components/clean-header";
-import { CleanChatArea, MessageItem } from "./components/clean-chat-area";
-import { LeadPanel, LeadData } from "./components/lead-panel";
-import { HitlModal, HitlTicketData } from "./components/hitl-modal";
-import { TelemetryModal, TelemetryTrace } from "./components/telemetry-modal";
+import { ChatHeader } from "./components/chat-header";
+import { ChatView, MessageItem } from "./components/chat-view";
+import { LeadDrawer, LeadData } from "./components/lead-drawer";
+import { HitlDialog, HitlTicketData } from "./components/hitl-dialog";
+import { TelemetryDialog, TelemetryTrace } from "./components/telemetry-dialog";
 
 export default function Home() {
   const [sessionId, setSessionId] = useState<string>("");
@@ -19,7 +19,6 @@ export default function Home() {
   const [latestTrace, setLatestTrace] = useState<TelemetryTrace | null>(null);
 
   // Layout & Modals
-  const [isSidebarOpen, setIsSidebarOpen] = useState(true);
   const [isLeadOpen, setIsLeadOpen] = useState(false);
   const [isHitlOpen, setIsHitlOpen] = useState(false);
   const [isTelemetryOpen, setIsTelemetryOpen] = useState(false);
@@ -310,25 +309,28 @@ export default function Home() {
     }
   };
 
+  const activeSession = sessions.find((s) => s.id === sessionId);
+  const activeChatTitle =
+    activeSession?.title ||
+    (messages.length > 0
+      ? messages.find((m) => m.role === "user")?.content || messages[0].content
+      : "Nueva Consulta");
+
   return (
     <div className="dark font-sans flex h-dvh w-screen overflow-hidden bg-background text-foreground select-none">
       {/* Sidebar with Recent Chats */}
       <AppSidebar
-        isOpen={isSidebarOpen}
-        onToggle={() => setIsSidebarOpen(!isSidebarOpen)}
         sessions={sessions}
         activeSessionId={sessionId}
         onSelectSession={handleSelectSession}
         onNewChat={handleNewChat}
-        userName={lead?.name}
       />
 
       {/* Main Conversation Area */}
       <div className="flex-1 flex flex-col h-full overflow-hidden">
-        {/* Minimal Header */}
-        <CleanHeader
-          isSidebarOpen={isSidebarOpen}
-          onToggleSidebar={() => setIsSidebarOpen(!isSidebarOpen)}
+        {/* Chat Header Toolbar */}
+        <ChatHeader
+          chatTitle={activeChatTitle}
           leadName={lead?.name}
           hitlCount={hitlCount}
           onOpenLead={() => setIsLeadOpen(true)}
@@ -337,8 +339,8 @@ export default function Home() {
           onNewChat={handleNewChat}
         />
 
-        {/* Clean Chat Canvas & Floating Input Composer */}
-        <CleanChatArea
+        {/* Chat Conversation View & Floating Input Composer */}
+        <ChatView
           messages={messages}
           onSendMessage={handleSendMessage}
           onSendFeedback={handleSendFeedback}
@@ -357,15 +359,15 @@ export default function Home() {
         />
       </div>
 
-      {/* Modals & Drawers */}
-      <LeadPanel
+      {/* Modals, Drawers & Dialogs */}
+      <LeadDrawer
         isOpen={isLeadOpen}
         onClose={() => setIsLeadOpen(false)}
         lead={lead}
         sessionId={sessionId}
       />
 
-      <HitlModal
+      <HitlDialog
         isOpen={isHitlOpen}
         onClose={() => setIsHitlOpen(false)}
         ticket={activeHitlTicket}
@@ -374,7 +376,7 @@ export default function Home() {
         onUpdateContact={handleUpdateContact}
       />
 
-      <TelemetryModal
+      <TelemetryDialog
         isOpen={isTelemetryOpen}
         onClose={() => setIsTelemetryOpen(false)}
         latestTrace={latestTrace}

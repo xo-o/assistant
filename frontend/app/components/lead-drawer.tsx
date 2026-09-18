@@ -35,14 +35,14 @@ export interface LeadData {
   updatedAt?: string;
 }
 
-interface LeadPanelProps {
+export interface LeadDrawerProps {
   isOpen: boolean;
   onClose: () => void;
   lead: LeadData | null;
   sessionId: string;
 }
 
-export function LeadPanel({ isOpen, onClose, lead, sessionId }: LeadPanelProps) {
+export function LeadDrawer({ isOpen, onClose, lead, sessionId }: LeadDrawerProps) {
   const clientName = lead?.name || lead?.nombre || null;
   const contactChannel =
     lead?.contactChannel ||
@@ -193,3 +193,6 @@ export function LeadPanel({ isOpen, onClose, lead, sessionId }: LeadPanelProps) 
     </Drawer>
   );
 }
+
+// Semantic alias
+export const LeadPanel = LeadDrawer;

@@ -2,21 +2,15 @@
 
 import React, { useState } from "react";
 import {
-  PanelLeft,
-  PanelLeftClose,
   ShieldAlert,
   Activity,
   UserCheck,
-  Car,
   MoreVertical,
   Plus,
   Keyboard,
-  Sparkles,
-  ExternalLink,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
 import {
   DropdownMenu,
   DropdownMenuTrigger,
@@ -28,11 +22,9 @@ import {
   DropdownMenuShortcut,
 } from "@/components/ui/dropdown-menu";
 import { ShortcutsDialog } from "./shortcuts-dialog";
-import { cn } from "@/lib/utils";
 
-interface CleanHeaderProps {
-  isSidebarOpen: boolean;
-  onToggleSidebar: () => void;
+export interface ChatHeaderProps {
+  chatTitle?: string | null;
   leadName?: string | null;
   hitlCount: number;
   onOpenLead: () => void;
@@ -41,57 +33,30 @@ interface CleanHeaderProps {
   onNewChat?: () => void;
 }
 
-export function CleanHeader({
-  isSidebarOpen,
-  onToggleSidebar,
+export function ChatHeader({
+  chatTitle,
   leadName,
   hitlCount,
   onOpenLead,
   onOpenHitl,
   onOpenTelemetry,
   onNewChat,
-}: CleanHeaderProps) {
+}: ChatHeaderProps) {
   const [isShortcutsOpen, setIsShortcutsOpen] = useState(false);
 
   return (
     <>
       <header className="flex h-11 items-center justify-between border-b border-border bg-background px-3 select-none text-xs shrink-0 z-10 font-sans">
-        {/* Left: Sidebar Toggle + Brand Identity */}
-        <div className="flex items-center gap-2">
-          <Tooltip>
-            <TooltipTrigger
-              render={
-                <Button
-                  variant="ghost"
-                  size="icon-xs"
-                  onClick={onToggleSidebar}
-                  aria-label={isSidebarOpen ? "Ocultar panel lateral" : "Mostrar historial"}
-                  className="size-7 text-muted-foreground hover:text-foreground hover:bg-muted rounded-lg cursor-pointer"
-                />
-              }
-            >
-              {isSidebarOpen ? (
-                <PanelLeftClose className="size-3.5" />
-              ) : (
-                <PanelLeft className="size-3.5" />
-              )}
-            </TooltipTrigger>
-            <TooltipContent side="bottom">
-              {isSidebarOpen ? "Ocultar panel" : "Mostrar historial"}
-            </TooltipContent>
-          </Tooltip>
-
-          {/* Clean App Brand Pill */}
-          <div className="flex h-[30px] items-center gap-1.5 rounded-lg bg-secondary/80 px-2.5 text-xs font-medium text-foreground shadow-xs select-none">
-            <Car className="size-3.5 text-primary shrink-0" />
-            <span className="font-semibold text-xs tracking-tight">Luis</span>
-            <span className="text-muted-foreground/60 text-[11px] hidden sm:inline">· Asesor Automotriz</span>
+        {/* Left: Chat Title Pill */}
+        <div className="flex items-center gap-2 min-w-0 max-w-md lg:max-w-xl">
+          <div className="flex h-[30px] items-center gap-2 rounded-lg px-2.5 text-xs font-medium text-foreground shadow-xs select-none max-w-full">
+            <span className="font-medium text-xs tracking-tight text-foreground truncate max-w-[240px] sm:max-w-[360px] md:max-w-[480px]">
+              {chatTitle || "Nueva Consulta"}
+            </span>
           </div>
         </div>
 
-
-
-        {/* Right: Clean Ellipsis Dropdown Menu */}
+        {/* Right: Actions Dropdown Menu */}
         <div className="flex items-center gap-1.5">
           <DropdownMenu>
             <DropdownMenuTrigger

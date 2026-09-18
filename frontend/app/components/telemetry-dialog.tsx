@@ -33,13 +33,13 @@ export interface TelemetryTrace {
   created_at?: string;
 }
 
-interface TelemetryModalProps {
+export interface TelemetryDialogProps {
   isOpen: boolean;
   onClose: () => void;
   latestTrace: TelemetryTrace | null;
 }
 
-export function TelemetryModal({ isOpen, onClose, latestTrace }: TelemetryModalProps) {
+export function TelemetryDialog({ isOpen, onClose, latestTrace }: TelemetryDialogProps) {
   return (
     <Dialog open={isOpen} onOpenChange={(open) => !open && onClose()}>
       <DialogContent className="sm:max-w-2xl p-0 gap-0 overflow-hidden border border-border/80 bg-popover shadow-2xl rounded-xl font-sans">
@@ -185,3 +185,6 @@ export function TelemetryModal({ isOpen, onClose, latestTrace }: TelemetryModalP
     </Dialog>
   );
 }
+
+// Semantic alias
+export const TelemetryModal = TelemetryDialog;

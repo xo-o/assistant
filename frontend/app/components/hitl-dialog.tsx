@@ -30,7 +30,7 @@ export interface HitlTicketData {
   createdAt?: string;
 }
 
-interface HitlModalProps {
+export interface HitlDialogProps {
   isOpen: boolean;
   onClose: () => void;
   ticket: HitlTicketData | null;
@@ -39,14 +39,14 @@ interface HitlModalProps {
   onUpdateContact?: (contact: string) => Promise<void>;
 }
 
-export function HitlModal({
+export function HitlDialog({
   isOpen,
   onClose,
   ticket,
   onResolveTicket,
   contactChannel,
   onUpdateContact,
-}: HitlModalProps) {
+}: HitlDialogProps) {
   const [inputContact, setInputContact] = useState("");
   const [isSaving, setIsSaving] = useState(false);
 
@@ -182,3 +182,6 @@ export function HitlModal({
     </Dialog>
   );
 }
+
+// Semantic alias
+export const HitlModal = HitlDialog;
