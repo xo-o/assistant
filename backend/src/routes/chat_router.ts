@@ -88,3 +88,13 @@ chatRouter.get("/chat/history/:sessionId", async (req: Request, res: Response) =
   const messages = await repository.getSessionMessages(sessionId);
   res.json({ sessionId, count: messages.length, messages });
 });
+
+// Delete a Session
+chatRouter.delete("/chat/sessions/:sessionId", async (req: Request, res: Response) => {
+  const sessionId = req.params.sessionId;
+  const deleted = await repository.deleteSession(sessionId);
+  if (!deleted) {
+    return res.status(404).json({ error: "Session not found" });
+  }
+  res.json({ success: true, sessionId });
+});

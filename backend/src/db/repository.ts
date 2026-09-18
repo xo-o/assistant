@@ -71,6 +71,14 @@ export class Repository {
       .limit(limit);
   }
 
+  async deleteSession(sessionId: string): Promise<boolean> {
+    const deleted = await this.db
+      .delete(chatSessions)
+      .where(eq(chatSessions.id, sessionId))
+      .returning();
+    return deleted.length > 0;
+  }
+
   // MESSAGES
   async addMessage(params: {
     sessionId: string;
