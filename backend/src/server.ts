@@ -7,6 +7,7 @@ import { leadsRouter } from "./routes/leads_router.js";
 import { hitlRouter } from "./routes/hitl_router.js";
 import { feedbackRouter } from "./routes/feedback_router.js";
 import { telemetryRouter } from "./routes/telemetry_router.js";
+import { closeDatabase } from "./db/database.js";
 
 // Initialize OpenTelemetry
 initTelemetry();
@@ -38,12 +39,34 @@ app.use("/api/v1", telemetryRouter);
 export { app };
 
 if (process.env.NODE_ENV !== "test") {
-  app.listen(env.PORT, env.HOST, () => {
+  const server = app.listen(env.PORT, env.HOST, () => {
     console.log(`=======================================================`);
     console.log(`🚀 Automotive Advisor Agent Backend running at http://${env.HOST}:${env.PORT}`);
     console.log(`📡 OpenTelemetry Cloud Trace: ${env.ENABLE_CLOUD_TRACE ? "ACTIVE" : "Console Fallback"}`);
     console.log(`🤖 Default Model: ${env.DEFAULT_MODEL}`);
-    console.log(`💾 Database: SQLite (WAL mode, English Schema)`);
+    console.log(`💾 Database: Supabase PostgreSQL (Port 6543 Pooler)`);
     console.log(`=======================================================`);
   });
+
+  const gracefulShutdown = async (signal: string) => {
+    console.log(`\n🛑 Received ${signal}. Starting graceful shutdown...`);
+    server.close(async () => {
+      console.log("✓ HTTP server stopped accepting incoming connections.");
+      try {
+        await closeDatabase();
+        console.log("✓ Database pool drained and disconnected.");
+      } catch (err) {
+        console.error("⚠ Error closing database connection:", err);
+      }
+      process.exit(0);
+    });
+
+    setTimeout(() => {
+      console.error("⚠ Forced termination due to timeout on graceful shutdown.");
+      process.exit(1);
+    }, 10000).unref();
+  };
+
+  process.on("SIGTERM", () => gracefulShutdown("SIGTERM"));
+  process.on("SIGINT", () => gracefulShutdown("SIGINT"));
 }

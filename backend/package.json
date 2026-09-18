@@ -5,11 +5,12 @@
   "main": "dist/server.js",
   "scripts": {
     "dev": "tsx watch src/server.ts",
-    "build": "tsc && cp src/knowledge/catalog.json dist/knowledge/",
+    "build": "tsc && mkdir -p dist/knowledge && cp src/knowledge/catalog.json dist/knowledge/",
     "start": "node dist/server.js",
     "test": "NODE_ENV=test tsx --test tests/**/*.test.ts",
     "db:generate": "drizzle-kit generate",
     "db:migrate": "tsx src/db/migrate.ts",
+    "db:migrate:prod": "node dist/db/migrate.js",
     "db:seed": "tsx src/db/seed.ts",
     "db:push": "drizzle-kit push",
     "db:studio": "drizzle-kit studio"

@@ -1,0 +1,36 @@
+node_modules
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+
+# Build outputs
+dist
+dist-tests
+coverage
+
+# Environment variables & credentials
+.env
+.env.*
+!.env.example
+
+# Local SQLite databases and temp files
+data
+*.db
+*.db-wal
+*.db-shm
+
+# Tests and documentation
+tests
+*.test.ts
+*.spec.ts
+
+# Git & CI/CD
+.git
+.gitignore
+.github
+.agents
+.vscode
+.idea
+Dockerfile
+README.md
