@@ -13,6 +13,9 @@ export async function GET(
     });
 
     if (!res.ok) {
+      if (res.status === 404) {
+        return NextResponse.json(null, { status: 200 });
+      }
       return NextResponse.json(null, { status: res.status });
     }
 
