@@ -3,7 +3,7 @@
 **Framework Principal:** Google ADK (*Agent Development Kit*) & Google Gen AI SDK  
 **Validación y Esquemas:** Zod (Tipado Estricto de Contratos)  
 **Frontend:** React 19 + Next.js + Tailwind CSS + `assistant-ui`  
-**Observabilidad:** OpenTelemetry SDK nativo con exportador a Google Cloud Trace  
+**Observabilidad:** Langfuse Cloud (LLM Tracing & Metrics) + OpenTelemetry SDK nativo  
 **Persistencia:** Drizzle ORM + Supabase PostgreSQL (Tablas y campos en inglés)  
 
 ---
@@ -18,21 +18,23 @@ El agente actúa bajo la persona de **Luis**, un asesor de compra y orientación
 3. Consulta documentación técnica especializada mediante RAG (`base_conocimientos_autos`).
 4. Deriva asistidamente mediante Human-in-the-Loop (`solicitar_contacto_humano`) cuando se solicita test drive o cotización formal.
 5. Protege la conversación mediante guardrails contra prompt injection, jailbreaks, temas fuera de alcance y alucinaciones de precios.
-6. Registra telemetría completa por turno (latencia, tokens in/out, trayectoria de tools) instrumentada con **OpenTelemetry** y compatible con **Google Cloud Trace**.
+6. Registra telemetría completa por turno (latencia, tokens in/out, trayectoria de tools, guardrails y feedback scores) instrumentada con **Langfuse Cloud** y compatible con el estándar **OpenTelemetry / Cloud Trace**.
 
 ---
 
 ## 2. Justificación Técnica del Framework Agéntico
 
-Se seleccionó **Google ADK (`@google/adk`) en conjunto con el Google Gen AI SDK (`@google/genai`) y Zod** por las siguientes razones de ingeniería:
+Se seleccionó **Google ADK (`@google/adk`) en conjunto con el Google Gen AI SDK (`@google/genai`), Langfuse y Zod** por las siguientes razones de ingeniería:
 
 1. **Alineación con el Ecosistema de Google:**
    - La especificación del challenge requería: *(preferiblemente Google Gen AI SDK / ADK)*.
-   - Google ADK es el framework oficial de Google diseñado específicamente para construir agentes conversacionales estructurados sobre modelos Gemini (`gemini-1.5-pro`, `gemini-2.0-flash`).
+   - Google ADK es el framework oficial de Google diseñado específicamente para construir agentes conversacionales estructurados sobre modelos Gemini (`gemini-1.5-pro`, `gemini-2.0-flash`, `gemini-3.8-flash`).
 2. **Tipado Estricto con Zod (25% de la Rúbrica):**
    - En lugar de validaciones manuales o tipos dinámicos, cada herramienta (`FunctionTool`) define sus parámetros con esquemas Zod rigurosos que se transforman nativamente en declaraciones de función de Google Gen AI.
-3. **Observabilidad Nativa con OpenTelemetry (10% de la Rúbrica):**
-   - `@google/adk` incorpora trazabilidad nativa en OpenTelemetry (`@opentelemetry/sdk-trace-node`) con detección de recursos de GCP y exportación a **Google Cloud Trace**, cumpliendo exactamente con el estándar corporativo solicitado.
+3. **Observabilidad Especializada de LLMs con Langfuse y OpenTelemetry (10% de la Rúbrica):**
+   - El challenge sugiere explícitamente: *(ej. OpenTelemetry Cloud Trace o LangFuse)*.
+   - **Langfuse** provee observabilidad nativa de LLMs con visualización jerárquica de trazas (*trace waterfall*), llamadas a herramientas con argumentos y salidas, conteo y costo de tokens (*in/out*), latencia paso a paso y puntuación de feedback de usuario (*scores*), accesible directamente vía web dashboard y mediante enlaces integrados en el modal de telemetría de la UI.
+   - Coexiste con spans estándar de OpenTelemetry para cumplimiento estricto con estándares corporativos W3C.
 4. **Desacoplamiento Limpio Full-Stack TypeScript:**
    - Frontend y backend comparten contratos de datos sin pérdida de fidelidad de tipos, eliminando problemas de serialización y permitiendo streaming SSE token-a-token de ultra-baja latencia.
 
@@ -84,9 +86,10 @@ Se seleccionó **Google ADK (`@google/adk`) en conjunto con el Google Gen AI SDK
 │  └──────────────────────────────────────────────────────────────────────────────────┘  │
 │                                                                                        │
 │  ┌──────────────────────────────────────────────────────────────────────────────────┐  │
-│  │                 Capa de Observabilidad: OpenTelemetry & Cloud Trace              │  │
-│  │  - Spans por turno, llamadas de herramientas y tiempos de respuesta              │  │
-│  │  - Exportador oficial a Google Cloud Trace + Fallback a consola estructurada      │  │
+│  │            Capa de Observabilidad: Langfuse Cloud & OpenTelemetry                │  │
+│  │  - Trazas de turno, spans de herramientas, conteo de tokens y latencia en ms     │  │
+│  │  - Dashboard web interactivo en Langfuse Cloud con árbol de ejecución            │  │
+│  │  - Spans estándar OpenTelemetry compatibles con W3C                              │  │
 │  └──────────────────────────────────────────────────────────────────────────────────┘  │
 └────────────────────────────────────────────────────────────────────────────────────────┘
 ```
@@ -129,14 +132,18 @@ cp .env.example .env
 cp .env.example backend/.env
 ```
 
-Edita `.env` con tu clave de Google Gemini:
+Edita `.env` con tu clave de Google Gemini y credenciales de Langfuse:
 ```env
 GEMINI_API_KEY="AIzaSy..."
-DEFAULT_MODEL="gemini-1.5-pro"
-ENABLE_CLOUD_TRACE=false
+DEFAULT_MODEL="gemini-3.8-flash"
 PORT=8000
+
+# Langfuse Observability & Metrics (https://cloud.langfuse.com)
+LANGFUSE_SECRET_KEY="sk-lf-..."
+LANGFUSE_PUBLIC_KEY="pk-lf-..."
+LANGFUSE_BASE_URL="https://us.cloud.langfuse.com"
 ```
-> *Nota:* Si no configuras una API key, el sistema utiliza automáticamente el **Mock Agent Offline**, permitiendo probar la aplicación, herramientas y tests unitarios sin costo ni dependencias de red.
+> *Nota:* Si no configuras una API key de Gemini, el sistema utiliza automáticamente el **Mock Agent Offline**, permitiendo probar la aplicación, herramientas, guardrails y trazas en Langfuse sin dependencias de red externa.
 
 ---
 

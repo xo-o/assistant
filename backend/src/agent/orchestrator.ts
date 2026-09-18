@@ -2,6 +2,7 @@ import { repository } from "../db/repository.js";
 import { Lead, HitlTicket } from "../db/schema.js";
 import { checkPromptInjection, checkOutOfScope, applyAntiLoopGuard, applyAntiHallucinationFilter } from "../guardrails/index.js";
 import { recordTraceSpan } from "../telemetry/tracer.js";
+import { recordLangfuseTurn } from "../telemetry/langfuse.js";
 import { mockAgent } from "./mock_agent.js";
 import { createLuisAgent } from "./luis_agent.js";
 import { env } from "../config/env.js";
@@ -27,6 +28,7 @@ export interface OrchestratorTurnResponse {
   hitl: Partial<HitlTicket> | null;
   telemetry: {
     traceId: string;
+    traceUrl?: string;
     modelName: string;
     latencyMs: number;
     inputTokens: number;
@@ -47,6 +49,7 @@ export interface OrchestratorTurnResponse {
 export class AgentOrchestrator {
   async executeTurn(request: OrchestratorTurnRequest): Promise<OrchestratorTurnResponse> {
     const startTime = Date.now();
+    const startDate = new Date(startTime);
     const traceId = randomUUID().replace(/-/g, "");
     const sessionId = request.sessionId || "session_default";
     const modelName = request.model || env.DEFAULT_MODEL;
@@ -92,6 +95,23 @@ export class AgentOrchestrator {
         tokenCount: outputTokens,
       });
 
+      const langfuseRes = await recordLangfuseTurn({
+        traceId,
+        sessionId,
+        userId: request.userId,
+        modelName,
+        userMessage: request.message,
+        assistantResponse: refusal,
+        latencyMs,
+        inputTokens,
+        outputTokens,
+        totalTokens: inputTokens + outputTokens,
+        startTime: startDate,
+        endTime: new Date(),
+        toolsCalled: [],
+        guardrailsResult: { passed: false, reason: injectionCheck.reason },
+      });
+
       await repository.saveTrace({
         traceId,
         sessionId,
@@ -101,7 +121,7 @@ export class AgentOrchestrator {
         outputTokens,
         totalTokens: inputTokens + outputTokens,
         toolsCalled: [],
-        guardrailsResult: { passed: false, reason: injectionCheck.reason },
+        guardrailsResult: { passed: false, reason: injectionCheck.reason, traceUrl: langfuseRes.traceUrl },
       });
 
       return {
@@ -116,6 +136,7 @@ export class AgentOrchestrator {
         hitl: null,
         telemetry: {
           traceId,
+          traceUrl: langfuseRes.traceUrl,
           modelName,
           latencyMs,
           inputTokens,
@@ -142,6 +163,23 @@ export class AgentOrchestrator {
         tokenCount: outputTokens,
       });
 
+      const langfuseRes = await recordLangfuseTurn({
+        traceId,
+        sessionId,
+        userId: request.userId,
+        modelName,
+        userMessage: request.message,
+        assistantResponse: refusal,
+        latencyMs,
+        inputTokens,
+        outputTokens,
+        totalTokens: inputTokens + outputTokens,
+        startTime: startDate,
+        endTime: new Date(),
+        toolsCalled: [],
+        guardrailsResult: { passed: false, reason: scopeCheck.reason },
+      });
+
       await repository.saveTrace({
         traceId,
         sessionId,
@@ -151,7 +189,7 @@ export class AgentOrchestrator {
         outputTokens,
         totalTokens: inputTokens + outputTokens,
         toolsCalled: [],
-        guardrailsResult: { passed: false, reason: scopeCheck.reason },
+        guardrailsResult: { passed: false, reason: scopeCheck.reason, traceUrl: langfuseRes.traceUrl },
       });
 
       return {
@@ -166,6 +204,7 @@ export class AgentOrchestrator {
         hitl: null,
         telemetry: {
           traceId,
+          traceUrl: langfuseRes.traceUrl,
           modelName,
           latencyMs,
           inputTokens,
@@ -331,7 +370,25 @@ export class AgentOrchestrator {
           toolCalls: toolsCalled.length > 0 ? toolsCalled : null,
         });
 
-        // 9. Save Execution Trace in DB
+        // 9. Record Langfuse LLM Observability Trace
+        const langfuseRes = await recordLangfuseTurn({
+          traceId,
+          sessionId,
+          userId: request.userId,
+          modelName,
+          userMessage: request.message,
+          assistantResponse: processedReply,
+          latencyMs,
+          inputTokens,
+          outputTokens,
+          totalTokens,
+          startTime: startDate,
+          endTime: new Date(),
+          toolsCalled,
+          guardrailsResult: { passed: true },
+        });
+
+        // 10. Save Execution Trace in DB
         await repository.saveTrace({
           traceId,
           sessionId,
@@ -341,10 +398,10 @@ export class AgentOrchestrator {
           outputTokens,
           totalTokens,
           toolsCalled,
-          guardrailsResult: { passed: true },
+          guardrailsResult: { passed: true, traceUrl: langfuseRes.traceUrl },
         });
 
-        // 10. Fetch current lead and latest hitl ticket
+        // 11. Fetch current lead and latest hitl ticket
         const latestLead = await repository.getLeadBySessionId(sessionId);
         const formattedLead = latestLead
           ? {
@@ -383,6 +440,7 @@ export class AgentOrchestrator {
           hitl: formattedTicket,
           telemetry: {
             traceId,
+            traceUrl: langfuseRes.traceUrl,
             modelName,
             latencyMs,
             inputTokens,

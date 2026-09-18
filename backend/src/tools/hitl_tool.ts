@@ -19,7 +19,7 @@ export function createSolicitarContactoHumanoTool(contextSessionId?: string): Fu
     parameters: SolicitarContactoHumanoParamsSchema as any,
     execute: async (args: any) => {
       const parsed = SolicitarContactoHumanoParamsSchema.parse(args);
-      const sessionId = parsed.session_id || contextSessionId || "session_default";
+      const sessionId = contextSessionId || parsed.session_id || "session_default";
       const motivo = parsed.motivo || "ESCALADO_HUMANO";
       let resumen = parsed.resumen_requerimiento || "Sin requerimiento especificado";
 

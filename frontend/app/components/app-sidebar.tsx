@@ -1,6 +1,7 @@
 "use client";
 
 import React, { useState, useMemo } from "react";
+import Link from "next/link";
 import { Plus, Search, X, MessageSquare } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { ScrollArea } from "@/components/ui/scroll-area";
@@ -61,15 +62,16 @@ export function AppSidebar({
         </div>
       </div>
 
-      {/* Action: New Chat Button (Studio Framer Style) */}
+      {/* Action: New Chat Button */}
       <div className="p-2 border-b border-sidebar-border space-y-1.5">
-        <Button
-          onClick={onNewChat}
-          className="w-full justify-center gap-1.5 h-[30px] rounded-lg text-xs font-semibold shadow-xs cursor-pointer"
+        <Link
+          href="/"
+          onClick={() => onNewChat?.()}
+          className="w-full flex items-center justify-center gap-1.5 h-[30px] rounded-lg text-xs font-semibold shadow-xs cursor-pointer bg-primary text-primary-foreground hover:bg-primary/90 transition-colors"
         >
           <Plus className="size-3.5" />
           <span>Nueva Consulta</span>
-        </Button>
+        </Link>
 
         {/* Search using Studio's InputGroup */}
         <InputGroup className="h-[28px] bg-muted/70">
@@ -126,18 +128,19 @@ export function AppSidebar({
                 const isActive = session.id === activeSessionId;
                 const title = session.title || "Nueva Consulta";
                 return (
-                  <button
+                  <Link
                     key={session.id}
-                    onClick={() => onSelectSession(session.id)}
+                    href={`/${session.id}`}
+                    onClick={() => onSelectSession?.(session.id)}
                     className={cn(
-                      "w-full text-left px-2.5 py-1.5 rounded-lg text-xs transition-colors cursor-pointer truncate flex items-center gap-2",
+                      "w-full text-left px-2.5 py-1.5 rounded-lg text-xs transition-colors cursor-pointer truncate flex items-center gap-2 block",
                       isActive
                         ? "bg-secondary text-foreground font-semibold shadow-xs"
                         : "text-muted-foreground hover:bg-muted hover:text-foreground"
                     )}
                   >
                     <span className="truncate flex-1">{title}</span>
-                  </button>
+                  </Link>
                 );
               })}
             </div>

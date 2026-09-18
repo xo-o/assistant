@@ -1,12 +1,13 @@
 import { Router, Request, Response } from "express";
 import { z } from "zod";
+import { randomUUID } from "crypto";
 import { orchestrator } from "../agent/orchestrator.js";
 import { repository } from "../db/repository.js";
 
 export const chatRouter = Router();
 
 const ChatRequestSchema = z.object({
-  session_id: z.string().optional().default("session_default"),
+  session_id: z.string().optional(),
   user_id: z.string().optional(),
   message: z.string().min(1, "El mensaje no puede estar vacío").max(1000, "Mensaje demasiado largo"),
   model: z.string().optional(),
@@ -16,8 +17,13 @@ const ChatRequestSchema = z.object({
 chatRouter.post("/chat", async (req: Request, res: Response) => {
   try {
     const parsed = ChatRequestSchema.parse(req.body);
+    const sessionId =
+      parsed.session_id && parsed.session_id.trim().length > 0
+        ? parsed.session_id.trim()
+        : "sess_" + randomUUID().replace(/-/g, "").slice(0, 12);
+
     const result = await orchestrator.executeTurn({
-      sessionId: parsed.session_id,
+      sessionId,
       userId: parsed.user_id,
       message: parsed.message,
       model: parsed.model,
@@ -37,6 +43,10 @@ chatRouter.post("/chat", async (req: Request, res: Response) => {
 chatRouter.post("/chat/stream", async (req: Request, res: Response) => {
   try {
     const parsed = ChatRequestSchema.parse(req.body);
+    const sessionId =
+      parsed.session_id && parsed.session_id.trim().length > 0
+        ? parsed.session_id.trim()
+        : "sess_" + randomUUID().replace(/-/g, "").slice(0, 12);
 
     res.setHeader("Content-Type", "text/event-stream");
     res.setHeader("Cache-Control", "no-cache");
@@ -44,7 +54,7 @@ chatRouter.post("/chat/stream", async (req: Request, res: Response) => {
     res.flushHeaders?.();
 
     const stream = orchestrator.executeTurnStream({
-      sessionId: parsed.session_id,
+      sessionId,
       userId: parsed.user_id,
       message: parsed.message,
       model: parsed.model,

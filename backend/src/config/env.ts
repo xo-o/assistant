@@ -17,6 +17,9 @@ const EnvSchema = z.object({
   CORS_ORIGIN: z.string().default("*"),
   MAX_HISTORY_TOKENS: z.coerce.number().default(4000),
   MAX_TURNS_HISTORY: z.coerce.number().default(10),
+  LANGFUSE_SECRET_KEY: z.string().optional(),
+  LANGFUSE_PUBLIC_KEY: z.string().optional(),
+  LANGFUSE_BASE_URL: z.string().default("https://us.cloud.langfuse.com"),
 });
 
 export type Env = z.infer<typeof EnvSchema>;
@@ -33,4 +36,7 @@ export const env: Env = EnvSchema.parse({
   CORS_ORIGIN: process.env.CORS_ORIGIN,
   MAX_HISTORY_TOKENS: process.env.MAX_HISTORY_TOKENS,
   MAX_TURNS_HISTORY: process.env.MAX_TURNS_HISTORY,
+  LANGFUSE_SECRET_KEY: process.env.LANGFUSE_SECRET_KEY,
+  LANGFUSE_PUBLIC_KEY: process.env.LANGFUSE_PUBLIC_KEY,
+  LANGFUSE_BASE_URL: process.env.LANGFUSE_BASE_URL || process.env.LANGFUSE_BASEURL || "https://us.cloud.langfuse.com",
 });

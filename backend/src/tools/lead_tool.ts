@@ -21,7 +21,7 @@ export function createGuardarLeadTool(contextSessionId?: string): FunctionTool {
     parameters: GuardarLeadParamsSchema as any,
     execute: async (args: any) => {
       const parsed = GuardarLeadParamsSchema.parse(args);
-      const sessionId = parsed.session_id || contextSessionId || "session_default";
+      const sessionId = contextSessionId || parsed.session_id || "session_default";
       const leadRecord = await repository.saveOrUpdateLead({
         sessionId,
         name: parsed.nombre,

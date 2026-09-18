@@ -289,6 +289,7 @@ Executes a conversational turn synchronously.
   "hitl": null,
   "telemetry": {
     "trace_id": "4bf92f3577b34da6a3ce929d0e0e4736",
+    "trace_url": "https://us.cloud.langfuse.com/trace/4bf92f3577b34da6a3ce929d0e0e4736",
     "latency_ms": 780,
     "input_tokens": 285,
     "output_tokens": 48,
