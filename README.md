@@ -29,10 +29,9 @@ Se seleccionó **Google ADK (`@google/adk`) en conjunto con el Google Gen AI SDK
 1. **Alineación con el Ecosistema de Google:**
    - La especificación del challenge requería: *(preferiblemente Google Gen AI SDK / ADK)*.
    - Google ADK es el framework oficial de Google diseñado específicamente para construir agentes conversacionales estructurados sobre modelos Gemini (`gemini-1.5-pro`, `gemini-2.0-flash`, `gemini-3.8-flash`).
-2. **Tipado Estricto con Zod (25% de la Rúbrica):**
-   - En lugar de validaciones manuales o tipos dinámicos, cada herramienta (`FunctionTool`) define sus parámetros con esquemas Zod rigurosos que se transforman nativamente en declaraciones de función de Google Gen AI.
-3. **Observabilidad Especializada de LLMs con Langfuse y OpenTelemetry (10% de la Rúbrica):**
-   - El challenge sugiere explícitamente: *(ej. OpenTelemetry Cloud Trace o LangFuse)*.
+2. **Tipado Estricto con Zod:**
+   - Cada herramienta (`FunctionTool`) define sus parámetros con esquemas Zod rigurosos que se transforman nativamente en declaraciones de función de Google Gen AI.
+3. **Observabilidad de LLMs con Langfuse y OpenTelemetry:**
    - **Langfuse** provee observabilidad nativa de LLMs con visualización jerárquica de trazas (*trace waterfall*), llamadas a herramientas con argumentos y salidas, conteo y costo de tokens (*in/out*), latencia paso a paso y puntuación de feedback de usuario (*scores*), accesible directamente vía web dashboard y mediante enlaces integrados en el modal de telemetría de la UI.
    - Coexiste con spans estándar de OpenTelemetry para cumplimiento estricto con estándares corporativos W3C.
 4. **Desacoplamiento Limpio Full-Stack TypeScript:**
@@ -175,7 +174,7 @@ El servidor backend arrancará en `http://localhost:8000`. Puedes verificar el h
 cd backend
 npm test
 ```
-*Resultado:* **27/27 pruebas unitarias e integración aprobadas (100% pass rate)** cubriendo Guardrails, Tools, Aislamiento de Memoria, Orquestador, consultas especializadas de Fondos Colectivos Pandero y captura robusta de contacto post-HITL.
+*Resultado:* **31/31 pruebas unitarias e integración aprobadas (100% pass rate)** cubriendo Guardrails, Tools, Aislamiento de Memoria, Observabilidad con Langfuse, Orquestador y consultas especializadas de Fondos Colectivos.
 
 #### 3. Iniciar el Frontend
 En otra terminal:
@@ -197,16 +196,3 @@ docker compose up --build
 - **Frontend Web UI:** `http://localhost:3000`
 - **Backend API:** `http://localhost:8000`
 - **Healthcheck:** `http://localhost:8000/health`
-
----
-
-## 7. Verificación de Criterios de la Rúbrica Oficial
-
-| Criterio | Ponderación | Estado | Implementación en este Proyecto |
-| :--- | :---: | :---: | :--- |
-| **Spec-Driven Development (SDD)** | **20%** | **100%** | 4 documentos formales en `/specs` con esquemas Zod, OpenAPI, FSM y casos Given-When-Then. |
-| **Arquitectura de Código** | **25%** | **100%** | Backend y Frontend completamente desacoplados. Tipado estricto en TypeScript con Zod. Tablas y campos de persistencia en inglés. |
-| **Implementación del Harness** | **20%** | **100%** | Herramientas `guardar_lead`, `solicitar_contacto_humano` y RAG con validación Zod. Interrupción HITL asistida con tickets `TICK-XXXXX`. Guardrails anti-jailbreak y captura de feedback (👍/👎). |
-| **Persistencia, Memoria y RAG** | **15%** | **100%** | Aislamiento estricto por `session_id`, prevención de contaminación de memoria, control de sliding window de tokens y búsqueda semántica en catálogo automotriz. |
-| **Experiencia Conversacional (UX)** | **10%** | **100%** | Persona Luis cálida y profesional, tuteo, mensajes breves, chips interactivos, panel de lead en vivo y streaming token-a-token. |
-| **Observabilidad y Telemetría** | **10%** | **100%** | Spans OpenTelemetry por turno, exportador a Google Cloud Trace, métricas de latencia ms, conteo de tokens in/out y visualizador de trazas en la UI. |

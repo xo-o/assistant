@@ -3,6 +3,11 @@ import { z } from "zod";
 
 dotenv.config();
 
+function cleanEnv(val: string | undefined): string | undefined {
+  if (!val) return val;
+  return val.replace(/^["']|["']$/g, "").trim();
+}
+
 const EnvSchema = z.object({
   PORT: z.coerce.number().default(8000),
   HOST: z.string().default("0.0.0.0"),
@@ -26,17 +31,17 @@ export type Env = z.infer<typeof EnvSchema>;
 
 export const env: Env = EnvSchema.parse({
   PORT: process.env.PORT,
-  HOST: process.env.HOST,
-  NODE_ENV: process.env.NODE_ENV,
-  GEMINI_API_KEY: process.env.GEMINI_API_KEY,
-  DEFAULT_MODEL: process.env.DEFAULT_MODEL,
-  DATABASE_URL: process.env.DATABASE_URL,
+  HOST: cleanEnv(process.env.HOST),
+  NODE_ENV: cleanEnv(process.env.NODE_ENV),
+  GEMINI_API_KEY: cleanEnv(process.env.GEMINI_API_KEY),
+  DEFAULT_MODEL: cleanEnv(process.env.DEFAULT_MODEL),
+  DATABASE_URL: cleanEnv(process.env.DATABASE_URL),
   ENABLE_CLOUD_TRACE: process.env.ENABLE_CLOUD_TRACE,
-  GCP_PROJECT_ID: process.env.GCP_PROJECT_ID,
-  CORS_ORIGIN: process.env.CORS_ORIGIN,
+  GCP_PROJECT_ID: cleanEnv(process.env.GCP_PROJECT_ID),
+  CORS_ORIGIN: cleanEnv(process.env.CORS_ORIGIN),
   MAX_HISTORY_TOKENS: process.env.MAX_HISTORY_TOKENS,
   MAX_TURNS_HISTORY: process.env.MAX_TURNS_HISTORY,
-  LANGFUSE_SECRET_KEY: process.env.LANGFUSE_SECRET_KEY,
-  LANGFUSE_PUBLIC_KEY: process.env.LANGFUSE_PUBLIC_KEY,
-  LANGFUSE_BASE_URL: process.env.LANGFUSE_BASE_URL || process.env.LANGFUSE_BASEURL || "https://us.cloud.langfuse.com",
+  LANGFUSE_SECRET_KEY: cleanEnv(process.env.LANGFUSE_SECRET_KEY),
+  LANGFUSE_PUBLIC_KEY: cleanEnv(process.env.LANGFUSE_PUBLIC_KEY),
+  LANGFUSE_BASE_URL: cleanEnv(process.env.LANGFUSE_BASE_URL || process.env.LANGFUSE_BASEURL || "https://us.cloud.langfuse.com"),
 });
