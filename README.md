@@ -210,9 +210,3 @@ docker compose up --build
 | **Persistencia, Memoria y RAG** | **15%** | **100%** | Aislamiento estricto por `session_id`, prevención de contaminación de memoria, control de sliding window de tokens y búsqueda semántica en catálogo automotriz. |
 | **Experiencia Conversacional (UX)** | **10%** | **100%** | Persona Luis cálida y profesional, tuteo, mensajes breves, chips interactivos, panel de lead en vivo y streaming token-a-token. |
 | **Observabilidad y Telemetría** | **10%** | **100%** | Spans OpenTelemetry por turno, exportador a Google Cloud Trace, métricas de latencia ms, conteo de tokens in/out y visualizador de trazas en la UI. |
-
----
-
-## 8. Guía para la Grabación del Video Demo (5-7 min)
-
-Consulta el archivo [`DEMO_SCRIPT.md`](./DEMO_SCRIPT.md) para consultar el libreto estructurado paso a paso con los tiempos exactos para la grabación de la demostración.
