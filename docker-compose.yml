@@ -11,10 +11,11 @@ services:
       - HOST=0.0.0.0
       - NODE_ENV=production
       - GEMINI_API_KEY=${GEMINI_API_KEY:-}
-      - DEFAULT_MODEL=${DEFAULT_MODEL:-gemini-1.5-pro}
+      - DEFAULT_MODEL=${DEFAULT_MODEL:-gemini-3.8-flash}
       - DATABASE_URL=${DATABASE_URL:-postgresql://postgres.xwkdsizgxtpxkeuooups:10dbnOndb10@aws-0-us-west-2.pooler.supabase.com:6543/postgres}
-      - ENABLE_CLOUD_TRACE=${ENABLE_CLOUD_TRACE:-false}
-      - GCP_PROJECT_ID=${GCP_PROJECT_ID:-}
+      - LANGFUSE_SECRET_KEY=${LANGFUSE_SECRET_KEY:-}
+      - LANGFUSE_PUBLIC_KEY=${LANGFUSE_PUBLIC_KEY:-}
+      - LANGFUSE_BASE_URL=${LANGFUSE_BASE_URL:-https://us.cloud.langfuse.com}
       - CORS_ORIGIN=*
     restart: unless-stopped
     healthcheck:

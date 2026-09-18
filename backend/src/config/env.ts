@@ -17,8 +17,6 @@ const EnvSchema = z.object({
   DATABASE_URL: z.string().default(
     "postgresql://postgres.xwkdsizgxtpxkeuooups:10dbnOndb10@aws-0-us-west-2.pooler.supabase.com:6543/postgres"
   ),
-  ENABLE_CLOUD_TRACE: z.coerce.boolean().default(false),
-  GCP_PROJECT_ID: z.string().optional(),
   CORS_ORIGIN: z.string().default("*"),
   MAX_HISTORY_TOKENS: z.coerce.number().default(4000),
   MAX_TURNS_HISTORY: z.coerce.number().default(10),
@@ -36,8 +34,6 @@ export const env: Env = EnvSchema.parse({
   GEMINI_API_KEY: cleanEnv(process.env.GEMINI_API_KEY),
   DEFAULT_MODEL: cleanEnv(process.env.DEFAULT_MODEL),
   DATABASE_URL: cleanEnv(process.env.DATABASE_URL),
-  ENABLE_CLOUD_TRACE: process.env.ENABLE_CLOUD_TRACE,
-  GCP_PROJECT_ID: cleanEnv(process.env.GCP_PROJECT_ID),
   CORS_ORIGIN: cleanEnv(process.env.CORS_ORIGIN),
   MAX_HISTORY_TOKENS: process.env.MAX_HISTORY_TOKENS,
   MAX_TURNS_HISTORY: process.env.MAX_TURNS_HISTORY,

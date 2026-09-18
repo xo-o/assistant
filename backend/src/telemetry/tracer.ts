@@ -12,24 +12,7 @@ export function initTelemetry(): Tracer {
 
   const provider = new NodeTracerProvider();
 
-  if (env.ENABLE_CLOUD_TRACE) {
-    try {
-      // Attempt to load GCP Trace exporter from ADK telemetry or GCP module
-      // eslint-disable-next-line @typescript-eslint/no-var-requires
-      const { getGcpExporters } = require("@google/adk/telemetry/gcp");
-      const exporters = getGcpExporters();
-      if (exporters && exporters.traceExporter) {
-        provider.addSpanProcessor(new SimpleSpanProcessor(exporters.traceExporter));
-        console.log("✓ Google Cloud Trace exporter initialized via ADK GCP telemetry");
-      } else {
-        provider.addSpanProcessor(new SimpleSpanProcessor(new ConsoleSpanExporter()));
-        console.log("ℹ Google Cloud Trace exporter not configured; using ConsoleSpanExporter");
-      }
-    } catch (err) {
-      provider.addSpanProcessor(new SimpleSpanProcessor(new ConsoleSpanExporter()));
-      console.log("ℹ GCP credentials not present; using standard ConsoleSpanExporter fallback");
-    }
-  } else if (env.NODE_ENV === "development") {
+  if (env.NODE_ENV === "development") {
     provider.addSpanProcessor(new SimpleSpanProcessor(new ConsoleSpanExporter()));
   }
 

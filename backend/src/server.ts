@@ -25,7 +25,7 @@ app.get("/health", (req, res) => {
     service: "automotive-advisor-backend",
     version: "1.0.0",
     engine: "Google ADK + Gen AI SDK",
-    cloudTraceEnabled: env.ENABLE_CLOUD_TRACE,
+    observability: "Langfuse Cloud",
   });
 });
 
@@ -42,7 +42,7 @@ if (process.env.NODE_ENV !== "test") {
   const server = app.listen(env.PORT, env.HOST, () => {
     console.log(`=======================================================`);
     console.log(`🚀 Automotive Advisor Agent Backend running at http://${env.HOST}:${env.PORT}`);
-    console.log(`📡 OpenTelemetry Cloud Trace: ${env.ENABLE_CLOUD_TRACE ? "ACTIVE" : "Console Fallback"}`);
+    console.log(`📡 Observability: Langfuse Cloud (${env.LANGFUSE_BASE_URL})`);
     console.log(`🤖 Default Model: ${env.DEFAULT_MODEL}`);
     console.log(`💾 Database: Supabase PostgreSQL (Port 6543 Pooler)`);
     console.log(`=======================================================`);
