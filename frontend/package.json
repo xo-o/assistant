@@ -13,8 +13,11 @@
     "@assistant-ui/react-google-adk": "latest",
     "@assistant-ui/react-markdown": "latest",
     "@base-ui/react": "^1.8.0",
+    "@fontsource/inter": "^5.3.0",
     "@google/adk": "^2.0.0",
     "class-variance-authority": "^0.7.1",
+    "clsx": "^2.1.1",
+    "cmdk": "^1.1.1",
     "cn": "^0.2.6",
     "lucide-react": "^1.41.0",
     "next": "^16.3.4",
@@ -22,6 +25,7 @@
     "react": "^19.2.8",
     "react-dom": "^19.2.8",
     "shadcn": "^4.21.0",
+    "tailwind-merge": "^3.7.0",
     "zod": "^4.5.4"
   },
   "devDependencies": {

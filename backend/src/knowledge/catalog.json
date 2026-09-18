@@ -96,5 +96,47 @@
     "title": "Modalidades de Financiamiento Automotriz en Perú: Crédito vs Fondos Colectivos vs Contado",
     "content": "En Perú existen tres modalidades principales para adquirir un vehículo: 1) **Crédito Vehicular Bancario**: Exige cuota inicial (10% a 20%), cobra intereses financieros (TEA bancaria), pero permite entrega inmediata tras aprobación. 2) **Fondos Colectivos**: Sistema de ahorro programado sin intereses bancarios tradicionales (solo cuota administrativa plana), con cuotas mensuales más accesibles y adjudicación mensual por sorteo o remate (ideal para quien no tiene apuro inmediato y busca no sobreendeudarse). 3) **Compra al Contado**: Cero costos financieros, pero requiere desembolso total de liquidez en un solo pago.",
     "keywords": ["financiamiento", "credito", "fondo colectivo", "banco", "cuota inicial", "intereses", "remate", "sorteo", "adjudicacion", "contado"]
+  },
+  {
+    "id": "pandero-sistema-fondos-colectivos",
+    "category": "financiamiento_pandero",
+    "title": "Cómo funciona el Sistema de Fondos Colectivos de Pandero Auto",
+    "content": "Pandero administra grupos de asociados que aportan cuotas mensuales a un fondo común para la compra de vehículos 0 km o seminuevos. A diferencia del crédito bancario tradicional, no cobra intereses financieros (TEA bancaria), sino una cuota de administración plana y predecible. La entrega del certificado se define en asambleas mensuales mediante dos modalidades: Sorteo (al azar para todos los asociados al día) o Remate (adelantando cuotas para adjudicar con anticipación). Más de 57 años en Perú supervisado por la SMV.",
+    "keywords": ["pandero", "fondo colectivo", "fondos colectivos", "sorteo", "remate", "asamblea", "cuota de administracion", "ahorro programado", "adjudicacion", "smv"]
+  },
+  {
+    "id": "pandero-sorteo-vs-remate",
+    "category": "financiamiento_pandero",
+    "title": "Modalidades de Adjudicación en Pandero: Sorteo vs Remate",
+    "content": "En cada asamblea mensual de Pandero existen dos caminos para adjudicarse el vehículo: 1) **Sorteo**: Modalidad equitativa donde todos los asociados al día participan con su bolilla/número de asociado, sin costo adicional. 2) **Remate**: El asociado propone voluntariamente adelantar un paquete de cuotas en sobre cerrado o plataforma digital; quien ofrece el mayor número de cuotas dentro del grupo se adjudica el certificado de inmediato ese mes. Las cuotas rematadas se descuentan íntegramente del saldo final del contrato.",
+    "keywords": ["sorteo", "remate", "asamblea", "adjudicar", "ganar", "adelantar cuotas", "adjudicacion anticipada", "pandero"]
+  },
+  {
+    "id": "pandero-certificados-y-cuotas",
+    "category": "financiamiento_pandero",
+    "title": "Valores de Certificados y Rangos de Cuotas en Pandero Auto",
+    "content": "Pandero Auto financia certificados vehiculares desde US$ 11,827 hasta más de US$ 50,000 en plazos estándar de 60 meses, con cuotas mensuales desde US$ 229 (aprox. S/ 778 al mes). El asociado adquiere un valor nominal en dólares y tiene la total libertad de elegir o cambiar de marca y modelo entre más de 75 marcas aliadas (Toyota, Hyundai, Kia, Nissan, Suzuki, Mazda, Volkswagen, Chevrolet, etc.) al momento de resultar adjudicado.",
+    "keywords": ["certificado", "cuota", "monto", "precio", "cuotas mensuales", "60 meses", "marcas aliadas", "pandero auto", "dolares", "soles"]
+  },
+  {
+    "id": "pandero-requisitos-y-flexibilidad",
+    "category": "financiamiento_pandero",
+    "title": "Requisitos de Afiliación y Flexibilidad para Independientes en Pandero",
+    "content": "La afiliación a Pandero es 100% digital o presencial en más de 60 puntos de venta a nivel nacional. Para inscribirse solo se requiere documento de identidad (DNI o Carné de Extranjería), pago de la cuota de inscripción (~3% a 4% + IGV) y la primera cuota mensual. No exige historial crediticio bancario riguroso ni boletas de pago formales al inicio, convirtiendo a Pandero en la alternativa ideal para trabajadores independientes, emprendedores y comerciantes no bancarizados.",
+    "keywords": ["requisitos", "inscripcion", "afiliacion", "independiente", "emprendedor", "dni", "evaluacion crediticia", "sin boleta", "pandero"]
+  },
+  {
+    "id": "pandero-costos-adicionales-adjudicacion",
+    "category": "financiamiento_pandero",
+    "title": "Costos Post-Adjudicación y Requisitos de Entrega en Pandero",
+    "content": "Al resultar adjudicado por sorteo o remate, se inicia el proceso de entrega de la unidad nueva. El asociado debe presentar garantías de respaldo (evaluación de capacidad de pago o aval) y asumir los costos obligatorios para proteger su inversión: seguro vehicular multirriesgo, seguro de desgravamen, dispositivo GPS de rastreo y gastos de trámites de placas y notariales. Al completar las 60 cuotas, el vehículo queda 100% libre de gravámenes.",
+    "keywords": ["post adjudicacion", "entrega", "garantias", "seguro vehicular", "gps", "placas", "tramites", "pandero"]
+  },
+  {
+    "id": "pandero-marcas-y-modelos-populares",
+    "category": "modelos_peru",
+    "title": "Catálogo de Marcas y Modelos más Solicitados en Pandero Auto",
+    "content": "Con más de 75 marcas disponibles en Perú, los modelos más populares en Pandero incluyen: **Autos de entrada/Urbanos:** Toyota Agya (desde $259/mes), Suzuki Swift (desde $289/mes), Kia Soluto (desde $259/mes), VW Virtus ($389/mes). **SUVs compactas y medianas:** VW T-Cross ($459/mes), Kia Seltos ($409/mes), Toyota Rush 7 pasajeros ($459/mes), Kia Sportage NQ5 ($629/mes), Mazda CX-5 ($569/mes), Toyota RAV4 ($699/mes). **Camionetas Pickups:** Toyota Hilux ($629/mes), Mitsubishi L200 ($569/mes) y VW Amarok V6 ($899/mes).",
+    "keywords": ["catalogo", "marcas", "modelos", "pandero auto", "suv", "sedan", "pickup", "toyota", "kia", "volkswagen", "mazda", "suzuki", "cuotas"]
   }
 ]

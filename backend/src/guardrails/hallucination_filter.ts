@@ -27,5 +27,18 @@ export function applyAntiHallucinationFilter(text: string): string {
     }
   }
 
+  // Pattern: promising guaranteed immediate draw win or auction win
+  const collectiveFundPromises = [
+    /(te\s+garantizo|te\s+aseguro|es\s+seguro)\s+que\s+(ganar[aá]s|saldr[aá]s\s+adjudicado)\s+en\s+el\s+(primer|1er)\s+mes/i,
+    /con\s+\d+\s+cuotas\s+(tienes\s+asegurado|ganas\s+seguro)\s+el\s+remate/i,
+  ];
+
+  for (const pattern of collectiveFundPromises) {
+    if (pattern.test(result)) {
+      result += " (Importante: La adjudicación en fondos colectivos se determina en asamblea mensual por sorteo al azar o según el mayor número de cuotas ofrecidas en remate).";
+      break;
+    }
+  }
+
   return result;
 }

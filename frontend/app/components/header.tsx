@@ -59,9 +59,13 @@ export function Header({
             onChange={(e) => onModelChange(e.target.value)}
             className="bg-transparent font-semibold text-foreground focus:outline-none cursor-pointer"
           >
-            <option value="gemini-1.5-pro">Gemini 1.5 Pro (Baseline)</option>
+            <option value="gemini-3.8-flash">Gemini 3.8 Flash (Latest)</option>
+            <option value="gemini-2.5-pro">Gemini 2.5 Pro</option>
+            <option value="gemini-2.5-flash">Gemini 2.5 Flash</option>
             <option value="gemini-2.0-flash">Gemini 2.0 Flash</option>
-            <option value="mock-agent">Mock Local (Test Mode)</option>
+            <option value="gemini-2.0-pro-exp-02-05">Gemini 2.0 Pro</option>
+            <option value="gemini-1.5-pro">Gemini 1.5 Pro (Baseline)</option>
+            <option value="gemini-1.5-flash">Gemini 1.5 Flash</option>
           </select>
         </div>
 

@@ -135,3 +135,45 @@ This matrix defines the acceptance criteria required to validate the migrated MV
   3. `prompt_tokens`, `completion_tokens`, and `total_tokens` are populated.
   4. The list of executed tools with input parameters and results is attached as span attributes.
   5. The trace is queryable via `GET /api/v1/telemetry/traces` and exported to Google Cloud Trace if GCP credentials are configured.
+
+---
+
+### TC-11: Collective Funds & Pandero Technical Query (Sorteo vs Remate)
+* **Given:** An active session with an interested customer.
+* **When:** The user asks: `"¿Cómo funciona el sorteo y remate en Pandero Fondos Colectivos?"`.
+* **Then:**
+  1. Tool `base_conocimientos_autos` is executed.
+  2. The assistant returns a clear, structured explanation distinguishing Sorteo (regular random draw at assembly with no extra cost) from Remate (voluntary advance installment bids).
+  3. The response clarifies that collective funds do not charge banking interest (TEA), but rather an administrative fee.
+  4. The assistant asks a progressive follow-up question regarding the customer's preferred planning timeline.
+
+---
+
+### TC-12: Pandero Promoter Escalation (HITL Affiliation)
+* **Given:** An ongoing session where an independent entrepreneur seeks vehicle financing.
+* **When:** The user requests: `"Quiero afiliarme a Pandero, ¿puede un promotor contactarme?"`.
+* **Then:**
+  1. Tool `solicitar_contacto_humano` is triggered with `motivo: "ASESORIA_PANDERO"`.
+  2. Ticket with unique code `TICK-XXXXX` is registered in `hitl_tickets` table with status `'PENDING'` or `'IN_PROGRESS'`.
+  3. The assistant confirms the ticket code to the user and notifies that an authorized Pandero promoter will reach out to conduct the simulation and digital affiliation without rigid paperwork.
+  4. The frontend UI displays the interactive HITL card with ticket details.
+
+---
+
+### TC-13: Multi-turn Highway Context Continuity
+* **Given:** An active conversation where the user has already identified themselves and discussed vehicle usage for work.
+* **When:** The user responds with short routing details (e.g. `"tramos de autopista"`).
+* **Then:**
+  1. The assistant must NOT re-introduce itself ("Hola soy Luis...").
+  2. The assistant must NOT re-ask for the customer's name.
+  3. The assistant must maintain conversational context and offer technical guidance regarding stability and fuel efficiency on highways.
+
+---
+
+### TC-14: Post-HITL Contact Capture and Ticket Linkage
+* **Given:** An active HITL ticket in status `'PENDING'` with no telephone or email yet registered.
+* **When:** The user provides their WhatsApp or email (e.g. `"mi whatsapp es +51 987654321"`).
+* **Then:**
+  1. Tool `guardar_lead` updates the `leads` table with the real `contact_channel`.
+  2. The active `hitl_tickets` record automatically updates its requirement summary with the customer's contact information.
+  3. The assistant acknowledges the contact naturally and confirms that the dealer advisor will reach out through that channel.

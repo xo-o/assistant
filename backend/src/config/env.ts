@@ -8,7 +8,7 @@ const EnvSchema = z.object({
   HOST: z.string().default("0.0.0.0"),
   NODE_ENV: z.enum(["development", "production", "test"]).default("development"),
   GEMINI_API_KEY: z.string().optional(),
-  DEFAULT_MODEL: z.string().default("gemini-1.5-pro"),
+  DEFAULT_MODEL: z.string().default("gemini-3.8-flash"),
   DATABASE_URL: z.string().default(
     "postgresql://postgres.xwkdsizgxtpxkeuooups:10dbnOndb10@aws-0-us-west-2.pooler.supabase.com:6543/postgres"
   ),

@@ -6,10 +6,18 @@ export interface AntiLoopContext {
 }
 
 export function applyAntiLoopGuard(candidateText: string, context: AntiLoopContext): string {
-  let processed = candidateText;
+  let processed = candidateText.trim();
 
-  // If user name is already known, ensure the assistant doesn't ask for the name again
+  // If user name is already known or conversation is ongoing, strip rogue greeting loops
   if (context.knownName && context.knownName.trim().length > 0) {
+    if (context.recentAssistantMessages && context.recentAssistantMessages.length > 0) {
+      // Remove redundant "Hola Soy Luis..." in turns after the opening greeting
+      processed = processed
+        .replace(/^(?:¡?hola!?\s*[👋😊]*\s*)?(?:soy\s+luis[,\s]+tu\s+asesor\s+automotriz[.\s]*)/i, "")
+        .replace(/^Hola\s*👋\s*Soy\s+Luis[,\s]+tu\s+asesor\s+automotriz[.\s]*/i, "")
+        .trim();
+    }
+
     const nameQuestions = [
       /¿con\s+qui[eé]n\s+tengo\s+el\s+gusto\??/gi,
       /¿c[oó]mo\s+te\s+llamas\??/gi,
@@ -19,7 +27,13 @@ export function applyAntiLoopGuard(candidateText: string, context: AntiLoopConte
 
     for (const q of nameQuestions) {
       if (q.test(processed)) {
-        processed = processed.replace(q, `¿En qué más te puedo orientar hoy, ${context.knownName}?`);
+        // If there is already substantial content in the response, just strip the question
+        const withoutQuestion = processed.replace(q, "").trim();
+        if (withoutQuestion.length > 25) {
+          processed = withoutQuestion;
+        } else {
+          processed = `¿En qué más te puedo orientar hoy, ${context.knownName}?`;
+        }
       }
     }
   }

@@ -149,6 +149,8 @@ export class Repository {
     const existing = await this.getLeadBySessionId(lead.sessionId);
     const now = new Date();
 
+    let resultLead: Lead;
+
     if (existing) {
       const updatedName = lead.name || existing.name;
       const updatedChannel = lead.contactChannel || existing.contactChannel;
@@ -169,7 +171,7 @@ export class Repository {
         .where(eq(leads.sessionId, lead.sessionId))
         .returning();
 
-      return updated;
+      resultLead = updated;
     } else {
       const id = "lead_" + randomUUID().replace(/-/g, "").slice(0, 16);
       const stage = lead.stage || "DESCUBRIMIENTO";
@@ -190,8 +192,33 @@ export class Repository {
         })
         .returning();
 
-      return created;
+      resultLead = created;
     }
+
+    // If a real contact channel is provided, link it to any active HITL tickets for this session
+    if (
+      resultLead.contactChannel &&
+      !resultLead.contactChannel.startsWith("sess_") &&
+      resultLead.contactChannel !== "session_default"
+    ) {
+      const sessionTickets = await this.db
+        .select()
+        .from(hitlTickets)
+        .where(eq(hitlTickets.sessionId, lead.sessionId));
+      for (const t of sessionTickets) {
+        if (!t.requirementSummary.includes(resultLead.contactChannel)) {
+          await this.db
+            .update(hitlTickets)
+            .set({
+              requirementSummary: `${t.requirementSummary}\nContacto del cliente: ${resultLead.contactChannel}`,
+              updatedAt: now,
+            })
+            .where(eq(hitlTickets.id, t.id));
+        }
+      }
+    }
+
+    return resultLead;
   }
 
   async getLeadBySessionId(sessionId: string): Promise<Lead | null> {
@@ -223,6 +250,17 @@ export class Repository {
     const code = ticket.ticketCode || `TICK-${Math.floor(10000 + Math.random() * 90000)}`;
     const now = new Date();
 
+    const existingLead = await this.getLeadBySessionId(ticket.sessionId);
+    let summary = ticket.requirementSummary;
+    if (
+      existingLead?.contactChannel &&
+      !existingLead.contactChannel.startsWith("sess_") &&
+      existingLead.contactChannel !== "session_default" &&
+      !summary.includes(existingLead.contactChannel)
+    ) {
+      summary += `\nContacto del cliente: ${existingLead.contactChannel}`;
+    }
+
     const [created] = await this.db
       .insert(hitlTickets)
       .values({
@@ -230,7 +268,7 @@ export class Repository {
         ticketCode: code,
         sessionId: ticket.sessionId,
         reason: ticket.reason,
-        requirementSummary: ticket.requirementSummary,
+        requirementSummary: summary,
         status: "PENDING",
         createdAt: now,
         updatedAt: now,

@@ -59,13 +59,23 @@ export class AgentOrchestrator {
     }
 
     // 2. Persist User Message
-    await repository.addMessage({
+    const userMsgRecord = await repository.addMessage({
       sessionId,
       role: "user",
       content: request.message,
     });
 
     const existingLead = await repository.getLeadBySessionId(sessionId);
+    const formattedExistingLead = existingLead
+      ? {
+          ...existingLead,
+          vehicle_type_interest: existingLead.vehicleTypeInterest,
+          primary_use: existingLead.primaryUse,
+          contact_channel: existingLead.contactChannel,
+          updated_at: existingLead.updatedAt,
+          created_at: existingLead.createdAt,
+        }
+      : null;
 
     // 3. Pre-execution Guardrails: Prompt Injection / Jailbreak
     const injectionCheck = checkPromptInjection(request.message);
@@ -102,7 +112,7 @@ export class AgentOrchestrator {
           content: refusal,
           createdAt: assistantMsg.createdAt.toISOString(),
         },
-        lead: existingLead,
+        lead: formattedExistingLead,
         hitl: null,
         telemetry: {
           traceId,
@@ -152,7 +162,7 @@ export class AgentOrchestrator {
           content: refusal,
           createdAt: assistantMsg.createdAt.toISOString(),
         },
-        lead: existingLead,
+        lead: formattedExistingLead,
         hitl: null,
         telemetry: {
           traceId,
@@ -188,8 +198,7 @@ export class AgentOrchestrator {
         const shouldUseMock =
           !env.GEMINI_API_KEY ||
           modelName === "mock-agent" ||
-          modelName === "mock" ||
-          env.NODE_ENV === "test";
+          modelName === "mock";
 
         if (shouldUseMock) {
           const result = await mockAgent.execute(sessionId, request.message, existingLead);
@@ -197,16 +206,57 @@ export class AgentOrchestrator {
           toolsCalled = result.toolsCalled;
         } else {
           try {
-            // Live Google ADK Execution
+            // Live Google ADK Execution with selected Gemini model
             const tools = [
               createGuardarLeadTool(sessionId),
               createSolicitarContactoHumanoTool(sessionId),
               createBaseConocimientosAutosTool(),
             ];
 
-            const { runner } = createLuisAgent({ model: modelName, sessionId, tools });
+            const { runner } = createLuisAgent({
+              model: modelName,
+              sessionId,
+              tools,
+              knownLead: existingLead,
+            });
+            const userId = request.userId || "anonymous";
+            const appName = "automotive-advisor";
+
+            // Ensure session exists in ADK SessionService before running
+            const existingSession = await runner.sessionService
+              .getSession({ appName, userId, sessionId })
+              .catch(() => null);
+            if (!existingSession) {
+              await runner.sessionService.createSession({ appName, userId, sessionId });
+            }
+
+            // Hydrate historical turns from database into runner's session storage
+            const storageSession = (runner.sessionService as any).sessions?.[appName]?.[userId]?.[sessionId];
+            if (storageSession && storageSession.events.length === 0) {
+              const allMessages = await repository.getSlidingWindowMessages(
+                sessionId,
+                env.MAX_HISTORY_TOKENS,
+                env.MAX_TURNS_HISTORY
+              );
+              // Filter out the message that was just persisted in step 2
+              const previousHistory = allMessages.filter((m) => m.id !== userMsgRecord.id);
+              for (const m of previousHistory) {
+                storageSession.events.push({
+                  id: `hist_${m.id}`,
+                  author: m.role === "user" ? "user" : "AGENTE_LUIS",
+                  content: {
+                    role: m.role === "user" ? "user" : "model",
+                    parts: [{ text: m.content }],
+                  },
+                  actions: { stateDelta: {}, artifactDelta: {}, requestedAuthConfigs: {}, requestedToolConfirmations: {} },
+                  longRunningToolIds: [],
+                  timestamp: m.createdAt.getTime(),
+                });
+              }
+            }
+
             const generator = runner.runAsync({
-              userId: request.userId || "anonymous",
+              userId,
               sessionId,
               newMessage: {
                 role: "user",
@@ -296,8 +346,30 @@ export class AgentOrchestrator {
 
         // 10. Fetch current lead and latest hitl ticket
         const latestLead = await repository.getLeadBySessionId(sessionId);
+        const formattedLead = latestLead
+          ? {
+              ...latestLead,
+              vehicle_type_interest: latestLead.vehicleTypeInterest,
+              primary_use: latestLead.primaryUse,
+              contact_channel: latestLead.contactChannel,
+              updated_at: latestLead.updatedAt,
+              created_at: latestLead.createdAt,
+            }
+          : null;
         const latestTickets = await repository.listHitlTickets(sessionId, 1);
         const latestTicket = latestTickets.length > 0 ? latestTickets[0] : null;
+        const formattedTicket = latestTicket
+          ? {
+              ...latestTicket,
+              ticket_code: latestTicket.ticketCode,
+              ticket_id: latestTicket.ticketCode,
+              requirement_summary: latestTicket.requirementSummary,
+              resumen: latestTicket.requirementSummary,
+              operator_notes: latestTicket.operatorNotes,
+              created_at: latestTicket.createdAt,
+              updated_at: latestTicket.updatedAt,
+            }
+          : null;
 
         return {
           sessionId,
@@ -307,8 +379,8 @@ export class AgentOrchestrator {
             content: processedReply,
             createdAt: assistantMsg.createdAt.toISOString(),
           },
-          lead: latestLead,
-          hitl: latestTicket,
+          lead: formattedLead,
+          hitl: formattedTicket,
           telemetry: {
             traceId,
             modelName,

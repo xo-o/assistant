@@ -1,18 +1,18 @@
 "use client";
 
 import React, { useState, useEffect } from "react";
-import { AppSidebar, ChatSessionItem } from "./components/AppSidebar";
-import { CleanHeader } from "./components/CleanHeader";
-import { CleanChatArea, MessageItem } from "./components/CleanChatArea";
-import { LeadPanel, LeadData } from "./components/LeadPanel";
-import { HitlModal, HitlTicketData } from "./components/HitlModal";
-import { TelemetryModal, TelemetryTrace } from "./components/TelemetryModal";
+import { AppSidebar, ChatSessionItem } from "./components/app-sidebar";
+import { CleanHeader } from "./components/clean-header";
+import { CleanChatArea, MessageItem } from "./components/clean-chat-area";
+import { LeadPanel, LeadData } from "./components/lead-panel";
+import { HitlModal, HitlTicketData } from "./components/hitl-modal";
+import { TelemetryModal, TelemetryTrace } from "./components/telemetry-modal";
 
 export default function Home() {
   const [sessionId, setSessionId] = useState<string>("");
   const [sessions, setSessions] = useState<ChatSessionItem[]>([]);
   const [messages, setMessages] = useState<MessageItem[]>([]);
-  const [currentModel, setCurrentModel] = useState<string>("gemini-1.5-pro");
+  const [currentModel, setCurrentModel] = useState<string>("gemini-3.8-flash");
   const [lead, setLead] = useState<LeadData | null>(null);
   const [activeHitlTicket, setActiveHitlTicket] = useState<HitlTicketData | null>(null);
   const [hitlCount, setHitlCount] = useState<number>(0);
@@ -76,7 +76,7 @@ export default function Home() {
       }
 
       // Fetch Lead for this session
-      const leadRes = await fetch(`http://127.0.0.1:8000/api/v1/leads/${id}`);
+      const leadRes = await fetch(`/api/lead/${id}`);
       if (leadRes.ok) {
         const leadData = await leadRes.json();
         setLead(leadData);
@@ -266,7 +266,7 @@ export default function Home() {
   // Resolve HITL ticket
   const handleResolveHitl = async (ticketCode: string, notes: string) => {
     try {
-      await fetch(`http://127.0.0.1:8000/api/v1/hitl/tickets/${ticketCode}`, {
+      await fetch(`/api/hitl/${ticketCode}`, {
         method: "PATCH",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
@@ -275,7 +275,11 @@ export default function Home() {
         }),
       });
 
-      if (activeHitlTicket && activeHitlTicket.ticket_code === ticketCode) {
+      if (
+        activeHitlTicket &&
+        (activeHitlTicket.ticket_code === ticketCode ||
+          activeHitlTicket.ticketCode === ticketCode)
+      ) {
         setActiveHitlTicket({ ...activeHitlTicket, status: "RESOLVED" });
       }
       setIsHitlOpen(false);
@@ -284,8 +288,30 @@ export default function Home() {
     }
   };
 
+  // Update Contact channel for lead & active ticket
+  const handleUpdateContact = async (contact: string) => {
+    try {
+      const res = await fetch(`/api/lead/${sessionId}/contact`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ contact }),
+      });
+      if (res.ok) {
+        const data = await res.json();
+        if (data.lead) {
+          setLead(data.lead);
+        }
+        if (data.ticket) {
+          setActiveHitlTicket(data.ticket);
+        }
+      }
+    } catch (err) {
+      console.error("Failed to update contact channel:", err);
+    }
+  };
+
   return (
-    <div className="flex h-dvh overflow-hidden bg-background text-foreground antialiased">
+    <div className="dark font-sans flex h-dvh w-screen overflow-hidden bg-background text-foreground select-none">
       {/* Sidebar with Recent Chats */}
       <AppSidebar
         isOpen={isSidebarOpen}
@@ -308,6 +334,7 @@ export default function Home() {
           onOpenLead={() => setIsLeadOpen(true)}
           onOpenHitl={() => setIsHitlOpen(true)}
           onOpenTelemetry={() => setIsTelemetryOpen(true)}
+          onNewChat={handleNewChat}
         />
 
         {/* Clean Chat Canvas & Floating Input Composer */}
@@ -325,6 +352,8 @@ export default function Home() {
           onModelChange={setCurrentModel}
           onOpenLead={() => setIsLeadOpen(true)}
           leadName={lead?.name}
+          contactChannel={lead?.contactChannel || (lead as any)?.contact_channel}
+          onUpdateContact={handleUpdateContact}
         />
       </div>
 
@@ -341,6 +370,8 @@ export default function Home() {
         onClose={() => setIsHitlOpen(false)}
         ticket={activeHitlTicket}
         onResolveTicket={handleResolveHitl}
+        contactChannel={lead?.contactChannel || (lead as any)?.contact_channel}
+        onUpdateContact={handleUpdateContact}
       />
 
       <TelemetryModal

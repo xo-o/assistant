@@ -14,13 +14,15 @@ const OUT_OF_SCOPE_PATTERNS = [
   /escribe\s+un\s+ensayo\s+sobre/i,
 ];
 
-// Automotive keywords whitelist
+// Automotive & Financing keywords whitelist
 const AUTOMOTIVE_KEYWORDS = [
   "auto", "carro", "vehiculo", "vehículo", "suv", "sedan", "sedán", "hatchback",
   "pickup", "crossover", "motor", "hibrido", "híbrido", "electrico", "eléctrico",
   "gasolina", "combustible", "test drive", "cotizacion", "cotización", "marca",
   "modelo", "llantas", "neumaticos", "frenos", "mantenimiento", "camioneta",
-  "manejo", "conducir", "potencia", "torque", "comprar", "precio", "kilometros"
+  "manejo", "conducir", "potencia", "torque", "comprar", "precio", "kilometros",
+  "pandero", "fondo colectivo", "fondos colectivos", "sorteo", "remate", "asamblea",
+  "cuota", "certificado", "financiamiento", "credito", "crédito"
 ];
 
 export function checkOutOfScope(userInput: string): GuardrailCheckResult {

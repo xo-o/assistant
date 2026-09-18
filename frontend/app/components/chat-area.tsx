@@ -2,7 +2,7 @@
 
 import React, { useState, useRef, useEffect } from "react";
 import { Send, ThumbsUp, ThumbsDown, Wrench, ShieldAlert, Sparkles, Loader2 } from "lucide-react";
-import { HitlTicketData } from "./HitlModal";
+import { HitlTicketData } from "./hitl-modal";
 
 export interface MessageItem {
   id: string;
@@ -142,27 +142,45 @@ export function ChatArea({
                 <div className="whitespace-pre-wrap">{msg.content}</div>
 
                 {/* HITL Ticket Alert Card */}
-                {msg.hitlTicket && (
-                  <div className="mt-3 p-3 rounded-xl bg-amber-500/10 border border-amber-500/30 text-xs flex flex-col gap-2">
-                    <div className="flex items-center justify-between text-amber-800 dark:text-amber-300 font-semibold">
-                      <span className="flex items-center gap-1.5">
-                        <ShieldAlert className="w-4 h-4" /> Derivación HITL: {msg.hitlTicket.ticket_code}
-                      </span>
-                      <span className="text-[10px] uppercase tracking-wider bg-amber-200 dark:bg-amber-900/60 px-2 py-0.5 rounded">
-                        {msg.hitlTicket.reason}
-                      </span>
+                {msg.hitlTicket && (() => {
+                  const tCode =
+                    msg.hitlTicket.ticketCode ||
+                    msg.hitlTicket.ticket_code ||
+                    msg.hitlTicket.ticket_id ||
+                    "TICK-PENDING";
+                  const tReason =
+                    msg.hitlTicket.reason ||
+                    msg.hitlTicket.motivo ||
+                    "COTIZACION_FORMAL";
+                  const tSummary =
+                    msg.hitlTicket.requirementSummary ||
+                    msg.hitlTicket.requirement_summary ||
+                    msg.hitlTicket.resumen ||
+                    "";
+                  return (
+                    <div className="mt-3 p-3 rounded-xl bg-amber-500/10 border border-amber-500/30 text-xs flex flex-col gap-2">
+                      <div className="flex items-center justify-between text-amber-800 dark:text-amber-300 font-semibold">
+                        <span className="flex items-center gap-1.5">
+                          <ShieldAlert className="w-4 h-4" /> Derivación HITL: {tCode}
+                        </span>
+                        <span className="text-[10px] uppercase tracking-wider bg-amber-200 dark:bg-amber-900/60 px-2 py-0.5 rounded">
+                          {tReason}
+                        </span>
+                      </div>
+                      {tSummary && (
+                        <p className="text-foreground/90 text-xs">
+                          {tSummary}
+                        </p>
+                      )}
+                      <button
+                        onClick={() => onOpenHitlTicket(msg.hitlTicket!)}
+                        className="self-start text-[11px] font-semibold text-blue-600 dark:text-blue-400 hover:underline cursor-pointer flex items-center gap-1"
+                      >
+                        Ver detalles y confirmar atención humana →
+                      </button>
                     </div>
-                    <p className="text-foreground/90 text-xs">
-                      {msg.hitlTicket.requirement_summary}
-                    </p>
-                    <button
-                      onClick={() => onOpenHitlTicket(msg.hitlTicket!)}
-                      className="self-start text-[11px] font-semibold text-blue-600 dark:text-blue-400 hover:underline cursor-pointer flex items-center gap-1"
-                    >
-                      Ver detalles y confirmar atención humana →
-                    </button>
-                  </div>
-                )}
+                  );
+                })()}
               </div>
 
               {/* Feedback buttons on assistant messages */}

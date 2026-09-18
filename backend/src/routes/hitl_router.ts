@@ -9,11 +9,25 @@ const UpdateTicketSchema = z.object({
   operator_notes: z.string().optional(),
 });
 
+function formatTicket(ticket: any) {
+  if (!ticket) return null;
+  return {
+    ...ticket,
+    ticket_code: ticket.ticketCode,
+    ticket_id: ticket.ticketCode,
+    requirement_summary: ticket.requirementSummary,
+    resumen: ticket.requirementSummary,
+    operator_notes: ticket.operatorNotes,
+    created_at: ticket.createdAt,
+    updated_at: ticket.updatedAt,
+  };
+}
+
 hitlRouter.get("/hitl/tickets", async (req: Request, res: Response) => {
   const sessionId = req.query.session_id as string | undefined;
   const limit = req.query.limit ? Number(req.query.limit) : 50;
   const tickets = await repository.listHitlTickets(sessionId, limit);
-  res.json({ count: tickets.length, tickets });
+  res.json({ count: tickets.length, tickets: tickets.map(formatTicket) });
 });
 
 hitlRouter.get("/hitl/tickets/:ticketCode", async (req: Request, res: Response) => {
@@ -23,7 +37,7 @@ hitlRouter.get("/hitl/tickets/:ticketCode", async (req: Request, res: Response) 
     res.status(404).json({ error: "Ticket not found", ticketCode: code });
     return;
   }
-  res.json(ticket);
+  res.json(formatTicket(ticket));
 });
 
 hitlRouter.patch("/hitl/tickets/:ticketCode", async (req: Request, res: Response) => {
@@ -35,7 +49,7 @@ hitlRouter.patch("/hitl/tickets/:ticketCode", async (req: Request, res: Response
       res.status(404).json({ error: "Ticket not found", ticketCode: code });
       return;
     }
-    res.json(updated);
+    res.json(formatTicket(updated));
   } catch (err) {
     if (err instanceof z.ZodError) {
       res.status(400).json({ error: "Validation Error", details: err.errors });

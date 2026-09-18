@@ -24,7 +24,7 @@ export default function RootLayout({
       className={cn("h-full dark font-sans", inter.variable)}
       style={{ colorScheme: "dark" }}
     >
-      <body className="h-full bg-black text-neutral-100 antialiased selection:bg-neutral-800">
+      <body className="h-full bg-background text-foreground antialiased selection:bg-primary/25 selection:text-foreground">
         <ThemeProvider
           attribute="class"
           defaultTheme="dark"

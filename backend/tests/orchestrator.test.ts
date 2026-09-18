@@ -62,7 +62,7 @@ describe("Agent Orchestrator Integration Suite", () => {
   it("TC-04: Test Drive Request should trigger HITL escalation ticket", async () => {
     const res = await orchestrator.executeTurn({
       sessionId,
-      message: "Me encanta esa SUV, ¿puedo agendar un test drive para este sábado?",
+      message: "Me encanta esa SUV, ¿puedo agendar un test drive para este sábado? Mi WhatsApp es +51 987654321",
       model: "mock-agent",
     });
 
@@ -100,5 +100,108 @@ describe("Agent Orchestrator Integration Suite", () => {
     assert.ok(latestTrace.traceId);
     assert.ok(latestTrace.latencyMs >= 0);
     assert.ok(latestTrace.totalTokens > 0);
+  });
+
+  it("TC-11: Pandero Fondos Colectivos Query should invoke RAG and explain Sorteo vs Remate", async () => {
+    const res = await orchestrator.executeTurn({
+      sessionId,
+      message: "¿Cómo funciona el sorteo y remate en Pandero Fondos Colectivos?",
+      model: "mock-agent",
+    });
+
+    assert.strictEqual(res.sessionId, sessionId);
+    assert.ok(res.message.content.includes("Sorteo"));
+    assert.ok(res.message.content.includes("Remate"));
+    const ragToolCall = res.telemetry.toolsCalled.find((t) => t.name === "base_conocimientos_autos");
+    assert.ok(ragToolCall);
+  });
+
+  it("TC-12: Pandero Promoter Request should trigger HITL ticket for affiliation", async () => {
+    const res = await orchestrator.executeTurn({
+      sessionId,
+      message: "Quiero afiliarme a Pandero, mi WhatsApp es +51 999888777, ¿puede un promotor contactarme?",
+      model: "mock-agent",
+    });
+
+    assert.strictEqual(res.sessionId, sessionId);
+    assert.ok(res.hitl);
+    assert.match(res.hitl.ticketCode!, /^TICK-\d{5}$/);
+    assert.strictEqual(res.hitl.reason, "ASESORIA_PANDERO");
+    assert.ok(res.message.content.includes(res.hitl.ticketCode!));
+  });
+
+  it("TC-13: Multi-turn Highway Context Continuity without rogue greeting loops", async () => {
+    const danySessionId = "sess_dany_work_" + Math.random().toString(36).slice(2, 9);
+    await repository.ensureSession(danySessionId);
+
+    // Turn 1
+    await orchestrator.executeTurn({
+      sessionId: danySessionId,
+      message: "Hola, me llamo Dany y busco un auto para trabajo",
+      model: "mock-agent",
+    });
+
+    // Turn 2
+    await orchestrator.executeTurn({
+      sessionId: danySessionId,
+      message: "es para ir a mi centro de trabajo",
+      model: "mock-agent",
+    });
+
+    // Turn 3
+    const turn3 = await orchestrator.executeTurn({
+      sessionId: danySessionId,
+      message: "tramos de autopista",
+      model: "mock-agent",
+    });
+
+    assert.strictEqual(turn3.sessionId, danySessionId);
+    // Must NOT re-introduce himself
+    assert.strictEqual(turn3.message.content.includes("Hola 👋 Soy Luis"), false);
+    // Must NOT ask for name again
+    assert.strictEqual(turn3.message.content.includes("¿Con quién tengo el gusto?"), false);
+    // Must contain relevant advice for highway/autopista
+    assert.ok(turn3.message.content.toLowerCase().includes("autopista") || turn3.message.content.toLowerCase().includes("carretera") || turn3.message.content.toLowerCase().includes("sedán"));
+  });
+
+  it("TC-14: Post-HITL Contact Capture and Ticket Linkage", async () => {
+    const sessId = "sess_hitl_contact_" + Math.random().toString(36).slice(2, 9);
+    await repository.ensureSession(sessId);
+
+    // 1. Initial escalation request WITHOUT contact:
+    // Luis should ask for contact first and NOT generate a ticket yet
+    const turn1 = await orchestrator.executeTurn({
+      sessionId: sessId,
+      message: "Quiero agendar un test drive para una SUV",
+      model: "mock-agent",
+    });
+    assert.strictEqual(turn1.hitl, null);
+    assert.ok(
+      turn1.message.content.toLowerCase().includes("whatsapp") ||
+      turn1.message.content.toLowerCase().includes("teléfono") ||
+      turn1.message.content.toLowerCase().includes("correo")
+    );
+
+    // 2. User provides WhatsApp number:
+    // Now the ticket is generated with the contact attached
+    const turn2 = await orchestrator.executeTurn({
+      sessionId: sessId,
+      message: "mi whatsapp es +51 987654321",
+      model: "mock-agent",
+    });
+
+    assert.ok(turn2.hitl);
+    const ticketCode = turn2.hitl.ticketCode || (turn2.hitl as any).ticket_code;
+    assert.ok(ticketCode);
+
+    // Verify lead in DB
+    const leadInDb = await repository.getLeadBySessionId(sessId);
+    assert.ok(leadInDb);
+    assert.ok(leadInDb.contactChannel?.includes("987654321"));
+
+    // Verify ticket in DB was generated with contact
+    const ticketInDb = await repository.getHitlTicketByCode(ticketCode);
+    assert.ok(ticketInDb);
+    assert.ok(ticketInDb.requirementSummary.includes("987654321"));
   });
 });

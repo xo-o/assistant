@@ -147,6 +147,7 @@ cd backend
 npm run db:generate   # Genera migraciones SQL en /migrations
 npm run db:push       # Aplica directamente el esquema a Supabase PostgreSQL
 npm run db:migrate    # Ejecuta migraciones pendientes
+npm run db:seed       # Precarga datos realistas de Pandero (sesiones, leads, tickets HITL y trazas OTel)
 npm run db:studio     # Abre Drizzle Studio para explorar la base de datos
 ```
 
@@ -157,6 +158,7 @@ npm run db:studio     # Abre Drizzle Studio para explorar la base de datos
 cd backend
 npm install
 npm run build
+npm run db:seed  # Precarga sesiones demo de Pandero y automotriz
 npm start
 ```
 El servidor backend arrancará en `http://localhost:8000`. Puedes verificar el healthcheck en `http://localhost:8000/health`.
@@ -166,7 +168,7 @@ El servidor backend arrancará en `http://localhost:8000`. Puedes verificar el h
 cd backend
 npm test
 ```
-*Resultado:* **20/20 pruebas unitarias e integración aprobadas (100% pass rate)** cubriendo Guardrails, Tools, Aislamiento de Memoria y Orquestador.
+*Resultado:* **27/27 pruebas unitarias e integración aprobadas (100% pass rate)** cubriendo Guardrails, Tools, Aislamiento de Memoria, Orquestador, consultas especializadas de Fondos Colectivos Pandero y captura robusta de contacto post-HITL.
 
 #### 3. Iniciar el Frontend
 En otra terminal:

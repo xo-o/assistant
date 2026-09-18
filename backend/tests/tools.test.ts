@@ -88,5 +88,19 @@ describe("Agent Tools Suite", () => {
       assert.ok(result.documents.length > 0);
       assert.strictEqual(result.documents[0].category, "motorizaciones");
     });
+
+    it("should retrieve relevant documents for Pandero collective funds and Sorteo vs Remate", async () => {
+      const tool = createBaseConocimientosAutosTool();
+      const result = await tool.execute({
+        query: "cómo funciona el sorteo y remate en Pandero Fondos Colectivos",
+        top_k: 2,
+      }) as any;
+
+      assert.strictEqual(result.status, "success");
+      assert.ok(result.documents.length > 0);
+      assert.ok(result.documents[0].category.startsWith("financiamiento"));
+      const hasPanderoDoc = result.documents.some((d: any) => d.content.includes("Pandero") || d.category === "financiamiento_pandero");
+      assert.ok(hasPanderoDoc);
+    });
   });
 });

@@ -1,0 +1,233 @@
+"use client";
+
+import React, { useState, useMemo } from "react";
+import { Plus, PanelLeftClose, PanelLeft, Car, Search, X, MessageSquare } from "lucide-react";
+import { Button } from "@/components/ui/button";
+import { ScrollArea } from "@/components/ui/scroll-area";
+import { Separator } from "@/components/ui/separator";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
+import {
+  InputGroup,
+  InputGroupAddon,
+  InputGroupButton,
+  InputGroupInput,
+} from "@/components/ui/input-group";
+import { Empty, EmptyMedia, EmptyTitle, EmptyDescription } from "@/components/ui/empty";
+import { cn } from "@/lib/utils";
+
+export interface ChatSessionItem {
+  id: string;
+  title: string | null;
+  updated_at?: string;
+  updatedAt?: string;
+}
+
+interface AppSidebarProps {
+  isOpen: boolean;
+  onToggle: () => void;
+  sessions: ChatSessionItem[];
+  activeSessionId: string;
+  onSelectSession: (sessionId: string) => void;
+  onNewChat: () => void;
+  userName?: string | null;
+}
+
+export function AppSidebar({
+  isOpen,
+  onToggle,
+  sessions,
+  activeSessionId,
+  onSelectSession,
+  onNewChat,
+  userName,
+}: AppSidebarProps) {
+  const [searchQuery, setSearchQuery] = useState("");
+
+  const filteredSessions = useMemo(() => {
+    const q = searchQuery.trim().toLowerCase();
+    if (!q) return sessions;
+    return sessions.filter(
+      (s) =>
+        (s.title && s.title.toLowerCase().includes(q)) ||
+        s.id.toLowerCase().includes(q)
+    );
+  }, [sessions, searchQuery]);
+
+  if (!isOpen) {
+    return (
+      <aside className="hidden md:flex flex-col items-center py-2 px-1.5 bg-sidebar border-r border-sidebar-border w-12 shrink-0 select-none z-30 font-sans">
+        <Tooltip>
+          <TooltipTrigger
+            render={
+              <Button
+                variant="ghost"
+                size="icon-xs"
+                onClick={onToggle}
+                className="size-8 text-muted-foreground hover:text-foreground hover:bg-muted rounded-lg"
+              />
+            }
+          >
+            <PanelLeft className="size-4" />
+          </TooltipTrigger>
+          <TooltipContent side="right">Expandir panel</TooltipContent>
+        </Tooltip>
+
+        <Separator className="my-2 bg-sidebar-border w-6" />
+
+        <Tooltip>
+          <TooltipTrigger
+            render={
+              <Button
+                variant="ghost"
+                size="icon-xs"
+                onClick={onNewChat}
+                className="size-8 text-muted-foreground hover:text-foreground hover:bg-muted rounded-lg"
+              />
+            }
+          >
+            <Plus className="size-4 text-primary" />
+          </TooltipTrigger>
+          <TooltipContent side="right">Nueva consulta</TooltipContent>
+        </Tooltip>
+      </aside>
+    );
+  }
+
+  return (
+    <aside className="flex w-64 flex-col border-r border-sidebar-border bg-sidebar text-sidebar-foreground overflow-hidden select-none text-xs shrink-0 font-sans z-30 transition-all duration-200">
+      {/* Studio Header Style */}
+      <div className="flex h-11 items-center justify-between border-b border-sidebar-border px-3 shrink-0">
+        <div className="flex items-center gap-2">
+          <span className="font-semibold text-xs tracking-wide text-foreground">
+            Conversaciones
+          </span>
+          <span className="text-[10px] font-mono text-muted-foreground bg-muted px-1.5 py-0.5 rounded">
+            {sessions.length}
+          </span>
+        </div>
+
+        <div className="flex items-center gap-1">
+          <Tooltip>
+            <TooltipTrigger
+              render={
+                <Button
+                  variant="ghost"
+                  size="icon-xs"
+                  onClick={onToggle}
+                  className="size-7 text-muted-foreground hover:text-foreground hover:bg-muted rounded-lg"
+                />
+              }
+            >
+              <PanelLeftClose className="size-3.5" />
+            </TooltipTrigger>
+            <TooltipContent side="right">Ocultar panel</TooltipContent>
+          </Tooltip>
+        </div>
+      </div>
+
+      {/* Action: New Chat Button (Studio Framer Style) */}
+      <div className="p-2 border-b border-sidebar-border space-y-1.5">
+        <Button
+          onClick={onNewChat}
+          className="w-full justify-center gap-1.5 h-[30px] rounded-lg text-xs font-semibold shadow-xs"
+        >
+          <Plus className="size-3.5" />
+          <span>Nueva Consulta</span>
+        </Button>
+
+        {/* Search using Studio's InputGroup */}
+        <InputGroup className="h-[28px] bg-muted/70">
+          <InputGroupAddon align="inline-start" className="pl-2">
+            <Search className="size-3 text-muted-foreground" />
+          </InputGroupAddon>
+          <InputGroupInput
+            type="text"
+            placeholder="Buscar en historial..."
+            value={searchQuery}
+            onChange={(e) => setSearchQuery(e.target.value)}
+            className="h-[28px] text-[11px] placeholder:text-muted-foreground/80 px-1.5 font-normal"
+          />
+          {searchQuery && (
+            <InputGroupAddon align="inline-end" className="pr-1">
+              <InputGroupButton
+                size="icon-xs"
+                onClick={() => setSearchQuery("")}
+                aria-label="Borrar búsqueda"
+                className="size-4 rounded text-muted-foreground hover:text-foreground"
+              >
+                <X className="size-2.5" />
+              </InputGroupButton>
+            </InputGroupAddon>
+          )}
+        </InputGroup>
+      </div>
+
+      {/* Sessions List */}
+      <div className="flex-1 overflow-hidden flex flex-col p-1.5">
+        <ScrollArea className="flex-1 pr-1">
+          {filteredSessions.length === 0 ? (
+            <Empty className="py-8">
+              <EmptyMedia variant="icon">
+                {searchQuery ? (
+                  <Search className="size-3.5 text-muted-foreground" />
+                ) : (
+                  <MessageSquare className="size-3.5 text-muted-foreground" />
+                )}
+              </EmptyMedia>
+              <EmptyTitle className="text-xs">
+                {searchQuery ? "Sin resultados" : "Sin consultas"}
+              </EmptyTitle>
+              <EmptyDescription className="text-[11px]">
+                {searchQuery
+                  ? "No se encontraron consultas con ese término."
+                  : "Comienza una nueva conversación con Luis."}
+              </EmptyDescription>
+            </Empty>
+          ) : (
+            <div className="space-y-0.5">
+              {filteredSessions.map((session) => {
+                const isActive = session.id === activeSessionId;
+                const title = session.title || "Nueva Consulta";
+                return (
+                  <button
+                    key={session.id}
+                    onClick={() => onSelectSession(session.id)}
+                    className={cn(
+                      "w-full text-left px-2.5 py-1.5 rounded-lg text-xs transition-colors cursor-pointer truncate flex items-center gap-2",
+                      isActive
+                        ? "bg-secondary text-foreground font-semibold shadow-xs"
+                        : "text-muted-foreground hover:bg-muted hover:text-foreground"
+                    )}
+                  >
+                    <span className="truncate flex-1">{title}</span>
+                  </button>
+                );
+              })}
+            </div>
+          )}
+        </ScrollArea>
+      </div>
+
+      {/* Footer: User profile card */}
+      <div className="p-2 border-t border-sidebar-border bg-sidebar shrink-0">
+        <div className="flex items-center gap-2 px-1.5 py-1 rounded-lg hover:bg-muted/60 transition-colors cursor-pointer">
+          <Avatar className="size-7 border border-sidebar-border">
+            <AvatarImage src="https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=100&auto=format&fit=crop&q=80" />
+            <AvatarFallback className="bg-secondary text-foreground text-[10px] font-semibold">
+              {userName ? userName.slice(0, 2).toUpperCase() : "LU"}
+            </AvatarFallback>
+          </Avatar>
+          <div className="flex-1 min-w-0">
+            <p className="text-xs font-medium text-foreground truncate">
+              {userName || "Cliente"}
+            </p>
+            <p className="text-[10px] text-muted-foreground font-mono truncate">
+              {userName ? `${userName.toLowerCase().replace(/\s+/g, ".")}@gmail.com` : "cliente@auto.pe"}
+            </p>
+          </div>
+        </div>
+      </div>
+    </aside>
+  );
+}

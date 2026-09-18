@@ -61,6 +61,12 @@ describe("Guardrails Suite", () => {
       const result = checkOutOfScope(onTopic);
       assert.strictEqual(result.blocked, false);
     });
+
+    it("should pass legitimate collective funds and Pandero queries", () => {
+      const panderoQuery = "¿Cómo funciona el sorteo y remate en Pandero Fondos Colectivos?";
+      const result = checkOutOfScope(panderoQuery);
+      assert.strictEqual(result.blocked, false);
+    });
   });
 
   describe("Anti-Loop Guard", () => {
@@ -73,11 +79,17 @@ describe("Guardrails Suite", () => {
     });
   });
 
-  describe("Anti-Hallucination Pricing Guard", () => {
+  describe("Anti-Hallucination Pricing & Collective Fund Guard", () => {
     it("should append a commercial disclaimer if a closed price is asserted", () => {
       const candidateReply = "El precio final cerrado es de $22000 dólares.";
       const output = applyAntiHallucinationFilter(candidateReply);
       assert.strictEqual(output.includes("concesionario oficial"), true);
+    });
+
+    it("should append disclaimer if false promise of guaranteed draw win is made", () => {
+      const candidateReply = "Te garantizo que saldrás adjudicado en el primer mes de tu plan.";
+      const output = applyAntiHallucinationFilter(candidateReply);
+      assert.strictEqual(output.includes("asamblea mensual por sorteo al azar"), true);
     });
   });
 });
