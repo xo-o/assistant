@@ -121,7 +121,7 @@ export class RAGEngine {
     if (this.aiClient && env.GEMINI_API_KEY && env.GEMINI_API_KEY.startsWith("AIza") && process.env.NODE_ENV !== "test") {
       try {
         const response = await this.aiClient.models.embedContent({
-          model: "text-embedding-004",
+          model: "gemini-embedding-001",
           contents: query,
         });
 
@@ -151,7 +151,7 @@ export class RAGEngine {
       if (!this.documentEmbeddings.has(doc.id)) {
         try {
           const res = await this.aiClient.models.embedContent({
-            model: "text-embedding-004",
+            model: "gemini-embedding-001",
             contents: `${doc.title}. ${doc.content}`,
           });
           const values = (res as any).embedding?.values || (res as any).embeddings?.[0]?.values;

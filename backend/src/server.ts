@@ -15,6 +15,12 @@ initTelemetry();
 const app = express();
 
 // Middlewares
+app.use((req, res, next) => {
+  if (req.url.includes("//")) {
+    req.url = req.url.replace(/\/{2,}/g, "/");
+  }
+  next();
+});
 app.use(cors({ origin: env.CORS_ORIGIN }));
 app.use(express.json());
 

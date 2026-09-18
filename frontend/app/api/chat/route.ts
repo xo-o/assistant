@@ -3,7 +3,7 @@ import { NextRequest, NextResponse } from "next/server";
 export const dynamic = "force-dynamic";
 export const maxDuration = 60;
 
-const BACKEND_URL = process.env.BACKEND_URL || "http://127.0.0.1:8000";
+const BACKEND_URL = (process.env.BACKEND_URL || "http://127.0.0.1:8000").replace(/\/+$/, "");
 
 export async function POST(req: NextRequest) {
   try {
@@ -16,6 +16,19 @@ export async function POST(req: NextRequest) {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(body),
       });
+
+      if (!response.ok) {
+        const errorText = await response.text();
+        console.error(`Backend stream error [${response.status}]:`, errorText);
+        return NextResponse.json(
+          {
+            error: "Backend Stream Error",
+            status: response.status,
+            details: errorText,
+          },
+          { status: response.status }
+        );
+      }
 
       return new Response(response.body, {
         headers: {

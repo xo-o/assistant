@@ -238,11 +238,15 @@ export function ChatWorkspace({ initialSessionId }: ChatWorkspaceProps) {
         }
       }
 
+      if (!accumulatedText.trim()) {
+        throw new Error("Stream returned no text tokens, falling back to JSON");
+      }
+
       // Finalize assistant message
       const assistantMsg: MessageItem = {
         id: "ast_" + Date.now(),
         role: "assistant",
-        content: accumulatedText || "Hola, ¿en qué te puedo asesorar?",
+        content: accumulatedText,
         createdAt: new Date().toISOString(),
         toolsCalled: activeTools,
         hitlTicket: currentTicket,
@@ -251,7 +255,7 @@ export function ChatWorkspace({ initialSessionId }: ChatWorkspaceProps) {
       setMessages((prev) => [...prev, assistantMsg]);
       fetchSessions();
     } catch (err) {
-      console.error("Stream error, falling back to JSON:", err);
+      console.warn("Stream error, falling back to JSON:", err);
       try {
         const fallbackRes = await fetch("/api/chat", {
           method: "POST",
@@ -283,9 +287,18 @@ export function ChatWorkspace({ initialSessionId }: ChatWorkspaceProps) {
 
           setMessages((prev) => [...prev, assistantMsg]);
           fetchSessions();
+        } else {
+          throw new Error("No message received from fallback");
         }
       } catch (fallbackErr) {
         console.error("Critical error connecting to backend:", fallbackErr);
+        const errorMsg: MessageItem = {
+          id: "err_" + Date.now(),
+          role: "assistant",
+          content: "Disculpa, hubo un inconveniente de conexión con el asesor. Por favor intenta enviar tu mensaje nuevamente.",
+          createdAt: new Date().toISOString(),
+        };
+        setMessages((prev) => [...prev, errorMsg]);
       }
     } finally {
       setIsStreaming(false);
